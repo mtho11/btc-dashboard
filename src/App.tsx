@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import './index.css'
 import { useBtcData } from './hooks/useBtcData'
+import { useMstrData } from './hooks/useMstrData'
 import { sma } from './lib/indicators'
 import Chart from './components/Chart'
 import RangeSelector, { type Range } from './components/RangeSelector'
@@ -23,6 +24,7 @@ export default function App() {
   const [range, setRange] = useState<Range>('1Y')
 
   const { data, loading, error } = useBtcData()
+  const { data: mstrData } = useMstrData()
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -76,6 +78,7 @@ export default function App() {
               ma50={ma50}
               ma200d={ma200d}
               ma200w={ma200w}
+              mstr={mstrData}
               range={range}
               dark={dark}
             />
