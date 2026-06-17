@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import './index.css'
 import { useBtcData } from './hooks/useBtcData'
 import { useMstrData } from './hooks/useMstrData'
-import { sma, deathCrosses } from './lib/indicators'
+import { sma, deathCrosses, goldenCrosses } from './lib/indicators'
 import Chart from './components/Chart'
 import RangeSelector, { type Range } from './components/RangeSelector'
 import ThemeToggle from './components/ThemeToggle'
@@ -35,6 +35,7 @@ export default function App() {
   const ma200d = useMemo(() => sma(data, 200), [data])
   const ma200w = useMemo(() => sma(data, 1400), [data])
   const crosses = useMemo(() => deathCrosses(ma50, ma200d), [ma50, ma200d])
+  const gCrosses = useMemo(() => goldenCrosses(ma50, ma200d), [ma50, ma200d])
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-200">
@@ -81,6 +82,7 @@ export default function App() {
               ma200w={ma200w}
               mstr={mstrData}
               deathCrosses={crosses}
+              goldenCrosses={gCrosses}
               range={range}
               dark={dark}
             />

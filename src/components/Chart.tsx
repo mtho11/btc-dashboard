@@ -42,11 +42,12 @@ interface ChartProps {
   ma200w: LinePoint[]
   mstr: DayClose[]
   deathCrosses: CrossPoint[]
+  goldenCrosses: CrossPoint[]
   range: Range
   dark: boolean
 }
 
-export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, range, dark }: ChartProps) {
+export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, goldenCrosses, range, dark }: ChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
@@ -60,13 +61,16 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     price?: number; ma50?: number; ma200d?: number; ma200w?: number; mstr?: number
   }>({})
 
-  // Reposition death cross arrow overlays using chart coordinate APIs
+  // Reposition all cross arrow overlays using chart coordinate APIs
   const updateArrows = useCallback(() => {
-    if (!chartRef.current || !ma50Ref.current || !overlayRef.current || deathCrosses.length === 0) return
+    if (!chartRef.current || !ma50Ref.current || !overlayRef.current) return
+    if (deathCrosses.length === 0 && goldenCrosses.length === 0) return
     const ts = chartRef.current.timeScale()
-    const arrows = overlayRef.current.querySelectorAll<HTMLElement>('[data-cross]')
-    arrows.forEach((el) => {
-      const time = Number(el.dataset.cross) as Time
+    // timeToCoordinate returns x relative to the chart pane (after left price scale)
+    const leftOffset = chartRef.current.priceScale('left').width()
+    const markers = overlayRef.current.querySelectorAll<HTMLElement>('[data-marker]')
+    markers.forEach((el) => {
+      const time = Number(el.dataset.marker) as Time
       const price = Number(el.dataset.price)
       const x = ts.timeToCoordinate(time)
       const y = ma50Ref.current!.priceToCoordinate(price)
@@ -74,14 +78,12 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
         el.style.display = 'none'
         return
       }
-      // timeToCoordinate returns x relative to the chart pane (inner canvas),
-      // but the overlay spans the full container including the left price scale.
-      const leftOffset = chartRef.current!.priceScale('left').width()
       el.style.display = 'block'
       el.style.left = `${x + leftOffset - 8}px`
-      el.style.top = `${y - 20}px` // center arrow just above the intersection
+      // death = tip points down at intersection; golden = tip points up at intersection
+      el.style.top = el.dataset.dir === 'golden' ? `${y - 2}px` : `${y - 14}px`
     })
-  }, [deathCrosses])
+  }, [deathCrosses, goldenCrosses])
 
   // Init chart once
   useEffect(() => {
@@ -242,7 +244,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
   // Reposition arrows when crosses or range changes
   useEffect(() => {
     setTimeout(updateArrows, 50)
-  }, [deathCrosses, range, updateArrows])
+  }, [deathCrosses, goldenCrosses, range, updateArrows])
 
   // Update visible range
   useEffect(() => {
@@ -260,16 +262,14 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     setTimeout(updateArrows, 100)
   }, [range, data, updateArrows])
 
-  // Build price lookup for each death cross (average of 50D and 200D at intersection)
+  // Build price lookup for each cross (average of 50D and 200D at intersection)
   const ma50Map = new Map(ma50.map((p) => [p.time, p.value]))
   const ma200dMap = new Map(ma200d.map((p) => [p.time, p.value]))
-  const crossPrices = new Map(
-    deathCrosses.map((c) => {
-      const v50 = ma50Map.get(c.time) ?? 0
-      const v200 = ma200dMap.get(c.time) ?? 0
-      return [c.time, (v50 + v200) / 2]
-    })
-  )
+  const avgPrice = (c: CrossPoint) => {
+    const v50 = ma50Map.get(c.time) ?? 0
+    const v200 = ma200dMap.get(c.time) ?? 0
+    return (v50 + v200) / 2
+  }
 
   const lastPrice = data.length ? data[data.length - 1].close : undefined
   const lastMa50 = ma50.length ? ma50[ma50.length - 1].value : undefined
@@ -290,19 +290,35 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       <Legend items={legendItems} />
       <div className="flex-1 w-full relative">
         <div ref={containerRef} className="absolute inset-0" />
-        {/* Death cross arrow overlays */}
+        {/* Cross arrow overlays (death = red down, golden = green up) */}
         <div ref={overlayRef} className="absolute inset-0 pointer-events-none overflow-hidden">
           {deathCrosses.map((c) => (
             <div
-              key={c.time}
-              data-cross={c.time}
-              data-price={crossPrices.get(c.time) ?? 0}
+              key={`d-${c.time}`}
+              data-marker={c.time}
+              data-dir="death"
+              data-price={avgPrice(c)}
               className="absolute"
               style={{ display: 'none' }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16">
                 <polygon points="8,14 2,4 14,4" fill="#ef4444" />
                 <rect x="7" y="0" width="2" height="5" fill="#ef4444" rx="1" />
+              </svg>
+            </div>
+          ))}
+          {goldenCrosses.map((c) => (
+            <div
+              key={`g-${c.time}`}
+              data-marker={c.time}
+              data-dir="golden"
+              data-price={avgPrice(c)}
+              className="absolute"
+              style={{ display: 'none' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16">
+                <polygon points="8,2 2,12 14,12" fill="#22c55e" />
+                <rect x="7" y="11" width="2" height="5" fill="#22c55e" rx="1" />
               </svg>
             </div>
           ))}

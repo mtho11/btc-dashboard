@@ -15,8 +15,7 @@ export interface CrossPoint {
   time: number
 }
 
-// Returns timestamps where fast MA crosses BELOW slow MA (death cross)
-export function deathCrosses(fast: LinePoint[], slow: LinePoint[]): CrossPoint[] {
+function _crosses(fast: LinePoint[], slow: LinePoint[], direction: 'above' | 'below'): CrossPoint[] {
   const slowMap = new Map(slow.map((p) => [p.time, p.value]))
   const crosses: CrossPoint[] = []
   for (let i = 1; i < fast.length; i++) {
@@ -25,11 +24,23 @@ export function deathCrosses(fast: LinePoint[], slow: LinePoint[]): CrossPoint[]
     const currFast = fast[i].value
     const currSlow = slowMap.get(fast[i].time)
     if (prevSlow == null || currSlow == null) continue
-    if (prevFast >= prevSlow && currFast < currSlow) {
+    if (direction === 'below' && prevFast >= prevSlow && currFast < currSlow) {
+      crosses.push({ time: fast[i].time })
+    } else if (direction === 'above' && prevFast <= prevSlow && currFast > currSlow) {
       crosses.push({ time: fast[i].time })
     }
   }
   return crosses
+}
+
+// Returns timestamps where fast MA crosses BELOW slow MA (death cross)
+export function deathCrosses(fast: LinePoint[], slow: LinePoint[]): CrossPoint[] {
+  return _crosses(fast, slow, 'below')
+}
+
+// Returns timestamps where fast MA crosses ABOVE slow MA (golden cross)
+export function goldenCrosses(fast: LinePoint[], slow: LinePoint[]): CrossPoint[] {
+  return _crosses(fast, slow, 'above')
 }
 
 export function sma(data: OhlcPoint[], period: number): LinePoint[] {
