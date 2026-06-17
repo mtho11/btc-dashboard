@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   createChart,
+  createSeriesMarkers,
   CandlestickSeries,
   LineSeries,
   LineStyle,
   type IChartApi,
   type ISeriesApi,
+  type ISeriesMarkersPluginApi,
   type CandlestickData,
   type LineData,
   type Time,
 } from 'lightweight-charts'
-import type { OhlcPoint, LinePoint } from '../lib/indicators'
+import type { OhlcPoint, LinePoint, CrossPoint } from '../lib/indicators'
 import type { DayClose } from '../hooks/useMstrData'
 import type { Range } from './RangeSelector'
 import Legend from './Legend'
@@ -41,11 +43,12 @@ interface ChartProps {
   ma200d: LinePoint[]
   ma200w: LinePoint[]
   mstr: DayClose[]
+  deathCrosses: CrossPoint[]
   range: Range
   dark: boolean
 }
 
-export default function Chart({ data, ma50, ma200d, ma200w, mstr, range, dark }: ChartProps) {
+export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, range, dark }: ChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const candleRef = useRef<ISeriesApi<'Candlestick'> | null>(null)
@@ -53,6 +56,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, range, dark }:
   const ma200dRef = useRef<ISeriesApi<'Line'> | null>(null)
   const ma200wRef = useRef<ISeriesApi<'Line'> | null>(null)
   const mstrRef = useRef<ISeriesApi<'Line'> | null>(null)
+  const markersRef = useRef<ISeriesMarkersPluginApi<Time> | null>(null)
 
   const [legendValues, setLegendValues] = useState<{
     price?: number; ma50?: number; ma200d?: number; ma200w?: number; mstr?: number
@@ -144,6 +148,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, range, dark }:
     ma200dRef.current = ma200dSeries
     ma200wRef.current = ma200wSeries
     mstrRef.current = mstrSeries
+    markersRef.current = createSeriesMarkers(candleSeries)
 
     chart.subscribeCrosshairMove((param) => {
       if (!param.time) {
@@ -213,6 +218,20 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, range, dark }:
     if (!mstrRef.current || mstr.length === 0) return
     mstrRef.current.setData(mstr.map((d) => ({ time: d.time as Time, value: d.value })))
   }, [mstr])
+
+  // Update death cross markers
+  useEffect(() => {
+    if (!markersRef.current || deathCrosses.length === 0) return
+    markersRef.current.setMarkers(
+      deathCrosses.map((c) => ({
+        time: c.time as Time,
+        position: 'aboveBar',
+        color: '#ef4444',
+        shape: 'arrowDown',
+        size: 1,
+      }))
+    )
+  }, [deathCrosses])
 
   // Update visible range
   useEffect(() => {
