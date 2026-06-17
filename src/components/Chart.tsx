@@ -62,20 +62,22 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
 
   // Reposition death cross arrow overlays using chart coordinate APIs
   const updateArrows = useCallback(() => {
-    if (!chartRef.current || !candleRef.current || !overlayRef.current || deathCrosses.length === 0) return
+    if (!chartRef.current || !ma50Ref.current || !overlayRef.current || deathCrosses.length === 0) return
     const ts = chartRef.current.timeScale()
     const arrows = overlayRef.current.querySelectorAll<HTMLElement>('[data-cross]')
     arrows.forEach((el) => {
       const time = Number(el.dataset.cross) as Time
+      const price = Number(el.dataset.price)
       const x = ts.timeToCoordinate(time)
-      if (x === null) {
+      // Use the MA series (left scale) to convert price → y pixel
+      const y = ma50Ref.current!.priceToCoordinate(price)
+      if (x === null || y === null) {
         el.style.display = 'none'
         return
       }
-      // Position arrow 20px above the top of the chart area
       el.style.display = 'block'
       el.style.left = `${x - 8}px`
-      el.style.top = '8px'
+      el.style.top = `${y - 20}px` // center arrow just above the intersection
     })
   }, [deathCrosses])
 
@@ -256,6 +258,17 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     setTimeout(updateArrows, 100)
   }, [range, data, updateArrows])
 
+  // Build price lookup for each death cross (average of 50D and 200D at intersection)
+  const ma50Map = new Map(ma50.map((p) => [p.time, p.value]))
+  const ma200dMap = new Map(ma200d.map((p) => [p.time, p.value]))
+  const crossPrices = new Map(
+    deathCrosses.map((c) => {
+      const v50 = ma50Map.get(c.time) ?? 0
+      const v200 = ma200dMap.get(c.time) ?? 0
+      return [c.time, (v50 + v200) / 2]
+    })
+  )
+
   const lastPrice = data.length ? data[data.length - 1].close : undefined
   const lastMa50 = ma50.length ? ma50[ma50.length - 1].value : undefined
   const lastMa200d = ma200d.length ? ma200d[ma200d.length - 1].value : undefined
@@ -281,6 +294,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
             <div
               key={c.time}
               data-cross={c.time}
+              data-price={crossPrices.get(c.time) ?? 0}
               className="absolute"
               style={{ display: 'none' }}
             >
