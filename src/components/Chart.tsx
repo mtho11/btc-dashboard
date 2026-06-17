@@ -129,7 +129,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       borderDownColor: '#ef4444',
       wickUpColor: '#22c55e',
       wickDownColor: '#ef4444',
-      priceScaleId: 'left',
+      priceScaleId: 'right',
     })
 
     const ma50Series = chart.addSeries(LineSeries, {
@@ -138,7 +138,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
-      priceScaleId: 'left',
+      priceScaleId: 'right',
     })
 
     const ma200dSeries = chart.addSeries(LineSeries, {
@@ -147,7 +147,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
-      priceScaleId: 'left',
+      priceScaleId: 'right',
     })
 
     const ma200wSeries = chart.addSeries(LineSeries, {
@@ -156,7 +156,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
-      priceScaleId: 'left',
+      priceScaleId: 'right',
     })
 
     const mstrSeries = chart.addSeries(LineSeries, {
@@ -166,7 +166,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: true,
       crosshairMarkerVisible: true,
-      priceScaleId: 'right',
+      priceScaleId: 'left',
     })
 
     chartRef.current = chart
