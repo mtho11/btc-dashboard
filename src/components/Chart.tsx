@@ -1,13 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   createChart,
-  createSeriesMarkers,
   CandlestickSeries,
   LineSeries,
   LineStyle,
   type IChartApi,
   type ISeriesApi,
-  type ISeriesMarkersPluginApi,
   type CandlestickData,
   type LineData,
   type Time,
@@ -50,17 +48,36 @@ interface ChartProps {
 
 export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, range, dark }: ChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const candleRef = useRef<ISeriesApi<'Candlestick'> | null>(null)
   const ma50Ref = useRef<ISeriesApi<'Line'> | null>(null)
   const ma200dRef = useRef<ISeriesApi<'Line'> | null>(null)
   const ma200wRef = useRef<ISeriesApi<'Line'> | null>(null)
   const mstrRef = useRef<ISeriesApi<'Line'> | null>(null)
-  const markersRef = useRef<ISeriesMarkersPluginApi<Time> | null>(null)
 
   const [legendValues, setLegendValues] = useState<{
     price?: number; ma50?: number; ma200d?: number; ma200w?: number; mstr?: number
   }>({})
+
+  // Reposition death cross arrow overlays using chart coordinate APIs
+  const updateArrows = useCallback(() => {
+    if (!chartRef.current || !candleRef.current || !overlayRef.current || deathCrosses.length === 0) return
+    const ts = chartRef.current.timeScale()
+    const arrows = overlayRef.current.querySelectorAll<HTMLElement>('[data-cross]')
+    arrows.forEach((el) => {
+      const time = Number(el.dataset.cross) as Time
+      const x = ts.timeToCoordinate(time)
+      if (x === null) {
+        el.style.display = 'none'
+        return
+      }
+      // Position arrow 20px above the top of the chart area
+      el.style.display = 'block'
+      el.style.left = `${x - 8}px`
+      el.style.top = '8px'
+    })
+  }, [deathCrosses])
 
   // Init chart once
   useEffect(() => {
@@ -92,7 +109,6 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       handleScale: true,
     })
 
-    // BTC candles on LEFT scale
     const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#22c55e',
       downColor: '#ef4444',
@@ -103,7 +119,6 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceScaleId: 'left',
     })
 
-    // MAs on LEFT scale
     const ma50Series = chart.addSeries(LineSeries, {
       color: MA_COLORS.ma50,
       lineWidth: 2,
@@ -131,7 +146,6 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceScaleId: 'left',
     })
 
-    // MSTR on RIGHT scale (different price range ~$200-$600 vs BTC $60k+)
     const mstrSeries = chart.addSeries(LineSeries, {
       color: MA_COLORS.mstr,
       lineWidth: 2,
@@ -148,7 +162,6 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     ma200dRef.current = ma200dSeries
     ma200wRef.current = ma200wSeries
     mstrRef.current = mstrSeries
-    markersRef.current = createSeriesMarkers(candleSeries)
 
     chart.subscribeCrosshairMove((param) => {
       if (!param.time) {
@@ -158,7 +171,6 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       const getLine = (s: ISeriesApi<'Line'>) =>
         (param.seriesData.get(s) as LineData | undefined)?.value
       const candleData = param.seriesData.get(candleSeries) as CandlestickData | undefined
-
       setLegendValues({
         price: candleData?.close,
         ma50: getLine(ma50Series),
@@ -168,9 +180,13 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       })
     })
 
+    // Reposition arrows whenever the visible range changes
+    chart.timeScale().subscribeVisibleTimeRangeChange(() => updateArrows())
+
     const ro = new ResizeObserver(() => {
       if (containerRef.current) {
         chart.resize(containerRef.current.clientWidth, containerRef.current.clientHeight)
+        updateArrows()
       }
     })
     if (containerRef.current.parentElement) {
@@ -204,34 +220,25 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
   useEffect(() => {
     if (!candleRef.current || !ma50Ref.current || !ma200dRef.current || !ma200wRef.current) return
     if (data.length === 0) return
-
     candleRef.current.setData(
       data.map((d) => ({ time: d.time as Time, open: d.open, high: d.high, low: d.low, close: d.close }))
     )
     ma50Ref.current.setData(ma50.map((d) => ({ time: d.time as Time, value: d.value })))
     ma200dRef.current.setData(ma200d.map((d) => ({ time: d.time as Time, value: d.value })))
     ma200wRef.current.setData(ma200w.map((d) => ({ time: d.time as Time, value: d.value })))
-  }, [data, ma50, ma200d, ma200w])
+    setTimeout(updateArrows, 50)
+  }, [data, ma50, ma200d, ma200w, updateArrows])
 
-  // Update MSTR data separately (may load after BTC)
+  // Update MSTR data
   useEffect(() => {
     if (!mstrRef.current || mstr.length === 0) return
     mstrRef.current.setData(mstr.map((d) => ({ time: d.time as Time, value: d.value })))
   }, [mstr])
 
-  // Update death cross markers
+  // Reposition arrows when crosses or range changes
   useEffect(() => {
-    if (!markersRef.current || deathCrosses.length === 0) return
-    markersRef.current.setMarkers(
-      deathCrosses.map((c) => ({
-        time: c.time as Time,
-        position: 'aboveBar',
-        color: '#ef4444',
-        shape: 'arrowDown',
-        size: 1,
-      }))
-    )
-  }, [deathCrosses])
+    setTimeout(updateArrows, 50)
+  }, [deathCrosses, range, updateArrows])
 
   // Update visible range
   useEffect(() => {
@@ -246,7 +253,8 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
         to: last as Time,
       })
     }
-  }, [range, data])
+    setTimeout(updateArrows, 100)
+  }, [range, data, updateArrows])
 
   const lastPrice = data.length ? data[data.length - 1].close : undefined
   const lastMa50 = ma50.length ? ma50[ma50.length - 1].value : undefined
@@ -265,7 +273,25 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
   return (
     <div className="flex flex-col gap-3 h-full">
       <Legend items={legendItems} />
-      <div ref={containerRef} className="flex-1 w-full" />
+      <div className="flex-1 w-full relative">
+        <div ref={containerRef} className="absolute inset-0" />
+        {/* Death cross arrow overlays */}
+        <div ref={overlayRef} className="absolute inset-0 pointer-events-none overflow-hidden">
+          {deathCrosses.map((c) => (
+            <div
+              key={c.time}
+              data-cross={c.time}
+              className="absolute"
+              style={{ display: 'none' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16">
+                <polygon points="8,14 2,4 14,4" fill="#ef4444" />
+                <rect x="7" y="0" width="2" height="5" fill="#ef4444" rx="1" />
+              </svg>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

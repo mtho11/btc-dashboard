@@ -21,7 +21,9 @@
       "Bash(git push *)",
       "Bash(gh run *)",
       "mcp__87bf0eb0-a17c-4ddf-9308-a097d3ab1da1__chart",
-      "Bash(kill 43664)"
+      "Bash(kill 43664)",
+      "Bash(node --input-type=module)",
+      "Bash(2>&1)"
     ]
   }
 }
