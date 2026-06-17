@@ -69,14 +69,16 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       const time = Number(el.dataset.cross) as Time
       const price = Number(el.dataset.price)
       const x = ts.timeToCoordinate(time)
-      // Use the MA series (left scale) to convert price → y pixel
       const y = ma50Ref.current!.priceToCoordinate(price)
       if (x === null || y === null) {
         el.style.display = 'none'
         return
       }
+      // timeToCoordinate returns x relative to the chart pane (inner canvas),
+      // but the overlay spans the full container including the left price scale.
+      const leftOffset = chartRef.current!.priceScale('left').width()
       el.style.display = 'block'
-      el.style.left = `${x - 8}px`
+      el.style.left = `${x + leftOffset - 8}px`
       el.style.top = `${y - 20}px` // center arrow just above the intersection
     })
   }, [deathCrosses])
