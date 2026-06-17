@@ -45,7 +45,7 @@ export default function App() {
             <span className="text-white font-bold text-sm">₿</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight">Bitcoin Dashboard</h1>
+            <h1 className="text-lg font-bold tracking-tight">Mike's BTC/MSTR Dashboard</h1>
             <p className="text-xs text-gray-500 dark:text-gray-400">BTC / USD · Moving Averages</p>
           </div>
         </div>
