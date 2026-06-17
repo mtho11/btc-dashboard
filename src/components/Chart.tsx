@@ -68,20 +68,27 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     const ts = chartRef.current.timeScale()
     // timeToCoordinate returns x relative to the chart pane (after left price scale)
     const leftOffset = chartRef.current.priceScale('left').width()
-    const markers = overlayRef.current.querySelectorAll<HTMLElement>('[data-marker]')
-    markers.forEach((el) => {
-      const time = Number(el.dataset.marker) as Time
-      const price = Number(el.dataset.price)
+
+    const position = (el: HTMLElement, time: Time, price: number) => {
       const x = ts.timeToCoordinate(time)
       const y = ma50Ref.current!.priceToCoordinate(price)
-      if (x === null || y === null) {
-        el.style.display = 'none'
-        return
-      }
+      return { x, y, ok: x !== null && y !== null }
+    }
+
+    overlayRef.current.querySelectorAll<HTMLElement>('[data-marker]').forEach((el) => {
+      const { x, y, ok } = position(el, Number(el.dataset.marker) as Time, Number(el.dataset.price))
+      if (!ok) { el.style.display = 'none'; return }
       el.style.display = 'block'
-      el.style.left = `${x + leftOffset - 8}px`
-      // death = tip points down at intersection; golden = tip points up at intersection
-      el.style.top = el.dataset.dir === 'golden' ? `${y - 2}px` : `${y - 14}px`
+      el.style.left = `${x! + leftOffset - 8}px`
+      el.style.top = el.dataset.dir === 'golden' ? `${y! - 2}px` : `${y! - 14}px`
+    })
+
+    overlayRef.current.querySelectorAll<HTMLElement>('[data-line]').forEach((el) => {
+      const { x, y, ok } = position(el, Number(el.dataset.line) as Time, Number(el.dataset.price))
+      if (!ok) { el.style.display = 'none'; return }
+      el.style.display = 'block'
+      el.style.left = `${x! + leftOffset}px` // centered on the 16px arrow
+      el.style.top = `${y!}px`
     })
   }, [deathCrosses, goldenCrosses])
 
@@ -292,35 +299,37 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
         <div ref={containerRef} className="absolute inset-0" />
         {/* Cross arrow overlays (death = red down, golden = green up) */}
         <div ref={overlayRef} className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* Death cross arrows */}
           {deathCrosses.map((c) => (
-            <div
-              key={`d-${c.time}`}
-              data-marker={c.time}
-              data-dir="death"
-              data-price={avgPrice(c)}
-              className="absolute"
-              style={{ display: 'none' }}
-            >
+            <div key={`d-${c.time}`} data-marker={c.time} data-dir="death" data-price={avgPrice(c)}
+              className="absolute" style={{ display: 'none' }}>
               <svg width="16" height="16" viewBox="0 0 16 16">
                 <polygon points="8,14 2,4 14,4" fill="#ef4444" />
                 <rect x="7" y="0" width="2" height="5" fill="#ef4444" rx="1" />
               </svg>
             </div>
           ))}
+          {/* Death cross dashed lines to time axis */}
+          {deathCrosses.map((c) => (
+            <div key={`dl-${c.time}`} data-line={c.time} data-price={avgPrice(c)}
+              className="absolute" style={{ display: 'none', width: '1px', bottom: '28px',
+                borderLeft: '1px dashed rgba(239,68,68,0.5)' }} />
+          ))}
+          {/* Golden cross arrows */}
           {goldenCrosses.map((c) => (
-            <div
-              key={`g-${c.time}`}
-              data-marker={c.time}
-              data-dir="golden"
-              data-price={avgPrice(c)}
-              className="absolute"
-              style={{ display: 'none' }}
-            >
+            <div key={`g-${c.time}`} data-marker={c.time} data-dir="golden" data-price={avgPrice(c)}
+              className="absolute" style={{ display: 'none' }}>
               <svg width="16" height="16" viewBox="0 0 16 16">
                 <polygon points="8,2 2,12 14,12" fill="#22c55e" />
                 <rect x="7" y="11" width="2" height="5" fill="#22c55e" rx="1" />
               </svg>
             </div>
+          ))}
+          {/* Golden cross dashed lines to time axis */}
+          {goldenCrosses.map((c) => (
+            <div key={`gl-${c.time}`} data-line={c.time} data-price={avgPrice(c)}
+              className="absolute" style={{ display: 'none', width: '1px', bottom: '28px',
+                borderLeft: '1px dashed rgba(34,197,94,0.5)' }} />
           ))}
         </div>
       </div>
