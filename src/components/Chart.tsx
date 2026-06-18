@@ -43,11 +43,12 @@ interface ChartProps {
   mstr: DayClose[]
   deathCrosses: CrossPoint[]
   goldenCrosses: CrossPoint[]
+  symbol: string
   range: Range
   dark: boolean
 }
 
-export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, goldenCrosses, range, dark }: ChartProps) {
+export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, goldenCrosses, symbol, range, dark }: ChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
@@ -242,9 +243,9 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     setTimeout(updateArrows, 50)
   }, [data, ma50, ma200d, ma200w, updateArrows])
 
-  // Update MSTR data
+  // Update MSTR data (clear when empty — symbol is not BTC)
   useEffect(() => {
-    if (!mstrRef.current || mstr.length === 0) return
+    if (!mstrRef.current) return
     mstrRef.current.setData(mstr.map((d) => ({ time: d.time as Time, value: d.value })))
   }, [mstr])
 
@@ -285,11 +286,11 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
   const lastMstr = mstr.length ? mstr[mstr.length - 1].value : undefined
 
   const legendItems = [
-    { label: 'BTC/USD', color: '#22c55e', value: legendValues.price ?? lastPrice },
+    { label: symbol === 'BTC' ? 'BTC/USD' : symbol, color: '#22c55e', value: legendValues.price ?? lastPrice },
     { label: '50D MA', color: MA_COLORS.ma50, value: legendValues.ma50 ?? lastMa50 },
     { label: '200D MA', color: MA_COLORS.ma200d, value: legendValues.ma200d ?? lastMa200d },
     { label: '200W MA', color: MA_COLORS.ma200w, value: legendValues.ma200w ?? lastMa200w },
-    { label: 'MSTR', color: MA_COLORS.mstr, value: legendValues.mstr ?? lastMstr, dashed: true },
+    ...(symbol === 'BTC' ? [{ label: 'MSTR', color: MA_COLORS.mstr, value: legendValues.mstr ?? lastMstr, dashed: true }] : []),
   ]
 
   return (

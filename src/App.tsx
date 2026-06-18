@@ -2,9 +2,11 @@ import { useState, useEffect, useMemo } from 'react'
 import './index.css'
 import { useBtcData } from './hooks/useBtcData'
 import { useMstrData } from './hooks/useMstrData'
+import { useStockOhlcData } from './hooks/useStockOhlcData'
 import { sma, deathCrosses, goldenCrosses } from './lib/indicators'
 import Chart from './components/Chart'
 import RangeSelector, { type Range } from './components/RangeSelector'
+import SymbolSelector, { type TickerSymbol } from './components/SymbolSelector'
 import ThemeToggle from './components/ThemeToggle'
 
 function useSystemDark() {
@@ -22,9 +24,15 @@ export default function App() {
   const systemDark = useSystemDark()
   const [dark, setDark] = useState(systemDark)
   const [range, setRange] = useState<Range>('1Y')
+  const [symbol, setSymbol] = useState<TickerSymbol>('BTC')
 
-  const { data, loading, error } = useBtcData()
+  const { data: btcData, loading: btcLoading, error: btcError } = useBtcData()
+  const { data: stockData, loading: stockLoading, error: stockError } = useStockOhlcData(symbol !== 'BTC' ? symbol : null)
   const { data: mstrData } = useMstrData()
+
+  const data = symbol === 'BTC' ? btcData : stockData
+  const loading = symbol === 'BTC' ? btcLoading : stockLoading
+  const error = symbol === 'BTC' ? btcError : stockError
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -54,12 +62,10 @@ export default function App() {
 
       <main className="p-6 flex flex-col gap-4" style={{ height: 'calc(100vh - 73px)' }}>
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-            {loading && 'Fetching price data…'}
-            {error && <span className="text-red-500">Error: {error}</span>}
-            {!loading && !error && data.length > 0 && (
-              <span>{data.length.toLocaleString()} daily candles loaded</span>
-            )}
+          <div className="flex items-center gap-3">
+            <SymbolSelector value={symbol} onChange={setSymbol} />
+            {loading && <span className="text-xs text-gray-400 dark:text-gray-500">Loading…</span>}
+            {error && <span className="text-xs text-red-500">Error: {error}</span>}
           </div>
           <RangeSelector value={range} onChange={setRange} />
         </div>
@@ -80,9 +86,10 @@ export default function App() {
               ma50={ma50}
               ma200d={ma200d}
               ma200w={ma200w}
-              mstr={mstrData}
+              mstr={symbol === 'BTC' ? mstrData : []}
               deathCrosses={crosses}
               goldenCrosses={gCrosses}
+              symbol={symbol}
               range={range}
               dark={dark}
             />
