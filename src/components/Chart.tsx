@@ -243,10 +243,11 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     setTimeout(updateArrows, 50)
   }, [data, ma50, ma200d, ma200w, updateArrows])
 
-  // Update MSTR data (clear when empty — symbol is not BTC)
+  // Update MSTR data and toggle left scale visibility
   useEffect(() => {
-    if (!mstrRef.current) return
+    if (!mstrRef.current || !chartRef.current) return
     mstrRef.current.setData(mstr.map((d) => ({ time: d.time as Time, value: d.value })))
+    chartRef.current.applyOptions({ leftPriceScale: { visible: mstr.length > 0 } })
   }, [mstr])
 
   // Reposition arrows when crosses or range changes
