@@ -68,7 +68,7 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight">Mike's BTC/MSTR Dashboard</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">BTC / USD · Moving Averages</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{activeSymbol} / USD · Moving Averages</p>
           </div>
         </div>
         <ThemeToggle dark={dark} onToggle={() => setDark((d) => !d)} />

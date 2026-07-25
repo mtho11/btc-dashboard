@@ -230,7 +230,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     })
   }, [dark])
 
-  // Update series data
+  // Update series data and immediately apply range to beat lwc's async auto-fit
   useEffect(() => {
     if (!candleRef.current || !ma50Ref.current || !ma200dRef.current || !ma200wRef.current) return
     if (data.length === 0) return
@@ -240,10 +240,23 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     ma50Ref.current.setData(ma50.map((d) => ({ time: d.time as Time, value: d.value })))
     ma200dRef.current.setData(ma200d.map((d) => ({ time: d.time as Time, value: d.value })))
     ma200wRef.current.setData(ma200w.map((d) => ({ time: d.time as Time, value: d.value })))
-    setTimeout(updateArrows, 50)
-  }, [data, ma50, ma200d, ma200w, updateArrows])
+    // Apply range in a RAF so it runs after lwc's first render (which triggers auto-fit).
+    // The chart time scale is null until the first render frame.
+    const raf = requestAnimationFrame(() => {
+      if (!chartRef.current) return
+      const secs = rangeToSeconds(range)
+      const last = data[data.length - 1].time
+      if (secs === Infinity) {
+        chartRef.current.timeScale().fitContent()
+      } else {
+        chartRef.current.timeScale().setVisibleRange({ from: (last - secs) as Time, to: last as Time })
+      }
+      setTimeout(updateArrows, 50)
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [data, ma50, ma200d, ma200w, range, updateArrows])
 
-  // Update MSTR data and toggle left scale visibility
+  // Update MSTR data and toggle right scale visibility
   useEffect(() => {
     if (!mstrRef.current || !chartRef.current) return
     mstrRef.current.setData(mstr.map((d) => ({ time: d.time as Time, value: d.value })))
@@ -255,7 +268,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     setTimeout(updateArrows, 50)
   }, [deathCrosses, goldenCrosses, range, updateArrows])
 
-  // Update visible range
+  // Re-apply range when user changes the range selector (data hasn't changed, so no RAF needed)
   useEffect(() => {
     if (!chartRef.current || data.length === 0) return
     const secs = rangeToSeconds(range)
@@ -263,13 +276,10 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     if (secs === Infinity) {
       chartRef.current.timeScale().fitContent()
     } else {
-      chartRef.current.timeScale().setVisibleRange({
-        from: (last - secs) as Time,
-        to: last as Time,
-      })
+      chartRef.current.timeScale().setVisibleRange({ from: (last - secs) as Time, to: last as Time })
     }
-    setTimeout(updateArrows, 100)
-  }, [range, data, updateArrows])
+    setTimeout(updateArrows, 50)
+  }, [range, data, mstr, updateArrows])
 
   // Build price lookup for each cross (average of 50D and 200D at intersection)
   const ma50Map = new Map(ma50.map((p) => [p.time, p.value]))
