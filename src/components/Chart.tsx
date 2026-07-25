@@ -130,7 +130,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       borderDownColor: '#ef4444',
       wickUpColor: '#22c55e',
       wickDownColor: '#ef4444',
-      priceScaleId: 'right',
+      priceScaleId: 'left',
     })
 
     const ma50Series = chart.addSeries(LineSeries, {
@@ -139,7 +139,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
-      priceScaleId: 'right',
+      priceScaleId: 'left',
     })
 
     const ma200dSeries = chart.addSeries(LineSeries, {
@@ -148,7 +148,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
-      priceScaleId: 'right',
+      priceScaleId: 'left',
     })
 
     const ma200wSeries = chart.addSeries(LineSeries, {
@@ -157,7 +157,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
-      priceScaleId: 'right',
+      priceScaleId: 'left',
     })
 
     const mstrSeries = chart.addSeries(LineSeries, {
@@ -167,7 +167,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: true,
       crosshairMarkerVisible: true,
-      priceScaleId: 'left',
+      priceScaleId: 'right',
     })
 
     chartRef.current = chart
@@ -247,7 +247,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
   useEffect(() => {
     if (!mstrRef.current || !chartRef.current) return
     mstrRef.current.setData(mstr.map((d) => ({ time: d.time as Time, value: d.value })))
-    chartRef.current.applyOptions({ leftPriceScale: { visible: mstr.length > 0 } })
+    chartRef.current.applyOptions({ rightPriceScale: { visible: mstr.length > 0 } })
   }, [mstr])
 
   // Reposition arrows when crosses or range changes

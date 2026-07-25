@@ -5,4 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/btc-dashboard/',
+  server: {
+    port: parseInt(process.env.PORT ?? '5173'),
+  },
 })
