@@ -11,8 +11,9 @@ export function useStockOhlcData(symbol: string | null) {
 
   useEffect(() => {
     if (!symbol) { setData([]); setLoading(false); return }
+    const ticker = symbol
 
-    if (cache[symbol]) { setData(cache[symbol]); setLoading(false); return }
+    if (cache[ticker]) { setData(cache[ticker]); setLoading(false); return }
 
     cancelRef.current = false
     setLoading(true)
@@ -20,7 +21,7 @@ export function useStockOhlcData(symbol: string | null) {
 
     async function fetchData() {
       try {
-        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=10y`
+        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=10y`
         const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(yahooUrl))
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
@@ -42,7 +43,7 @@ export function useStockOhlcData(symbol: string | null) {
           .sort((a, b) => a.time - b.time)
 
         if (!cancelRef.current) {
-          cache[symbol] = points
+          cache[ticker] = points
           setData(points)
         }
       } catch (e) {

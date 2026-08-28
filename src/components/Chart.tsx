@@ -70,14 +70,14 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     // timeToCoordinate returns x relative to the chart pane (after left price scale)
     const leftOffset = chartRef.current.priceScale('left').width()
 
-    const position = (el: HTMLElement, time: Time, price: number) => {
+    const position = (time: Time, price: number) => {
       const x = ts.timeToCoordinate(time)
       const y = ma50Ref.current!.priceToCoordinate(price)
       return { x, y, ok: x !== null && y !== null }
     }
 
     overlayRef.current.querySelectorAll<HTMLElement>('[data-marker]').forEach((el) => {
-      const { x, y, ok } = position(el, Number(el.dataset.marker) as Time, Number(el.dataset.price))
+      const { x, y, ok } = position(Number(el.dataset.marker) as Time, Number(el.dataset.price))
       if (!ok) { el.style.display = 'none'; return }
       el.style.display = 'block'
       el.style.left = `${x! + leftOffset - 8}px`
@@ -85,7 +85,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     })
 
     overlayRef.current.querySelectorAll<HTMLElement>('[data-line]').forEach((el) => {
-      const { x, y, ok } = position(el, Number(el.dataset.line) as Time, Number(el.dataset.price))
+      const { x, y, ok } = position(Number(el.dataset.line) as Time, Number(el.dataset.price))
       if (!ok) { el.style.display = 'none'; return }
       el.style.display = 'block'
       el.style.left = `${x! + leftOffset}px` // centered on the 16px arrow
@@ -130,7 +130,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       borderDownColor: '#ef4444',
       wickUpColor: '#22c55e',
       wickDownColor: '#ef4444',
-      priceScaleId: 'left',
+      priceScaleId: 'right',
     })
 
     const ma50Series = chart.addSeries(LineSeries, {
@@ -139,7 +139,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
-      priceScaleId: 'left',
+      priceScaleId: 'right',
     })
 
     const ma200dSeries = chart.addSeries(LineSeries, {
@@ -148,7 +148,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
-      priceScaleId: 'left',
+      priceScaleId: 'right',
     })
 
     const ma200wSeries = chart.addSeries(LineSeries, {
@@ -157,7 +157,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
-      priceScaleId: 'left',
+      priceScaleId: 'right',
     })
 
     const mstrSeries = chart.addSeries(LineSeries, {
@@ -167,7 +167,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceLineVisible: false,
       lastValueVisible: true,
       crosshairMarkerVisible: true,
-      priceScaleId: 'right',
+      priceScaleId: 'left',
     })
 
     chartRef.current = chart
@@ -256,11 +256,11 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     return () => cancelAnimationFrame(raf)
   }, [data, ma50, ma200d, ma200w, range, updateArrows])
 
-  // Update MSTR data and toggle right scale visibility
+  // Update MSTR data and toggle its left-side price scale visibility.
   useEffect(() => {
     if (!mstrRef.current || !chartRef.current) return
     mstrRef.current.setData(mstr.map((d) => ({ time: d.time as Time, value: d.value })))
-    chartRef.current.applyOptions({ rightPriceScale: { visible: mstr.length > 0 } })
+    chartRef.current.applyOptions({ leftPriceScale: { visible: mstr.length > 0 } })
   }, [mstr])
 
   // Reposition arrows when crosses or range changes
