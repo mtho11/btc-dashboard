@@ -2,12 +2,10 @@ import { useState, useEffect, useMemo } from 'react'
 import './index.css'
 import { useBtcData } from './hooks/useBtcData'
 import { useMstrData } from './hooks/useMstrData'
-import { useStockOhlcData } from './hooks/useStockOhlcData'
 import { useCryptoOhlcData } from './hooks/useCryptoOhlcData'
 import { sma, deathCrosses, goldenCrosses } from './lib/indicators'
 import Chart from './components/Chart'
 import RangeSelector, { type Range } from './components/RangeSelector'
-import SymbolSelector, { type TickerSymbol } from './components/SymbolSelector'
 import CryptoTabSelector, { type CryptoTab } from './components/CryptoTabSelector'
 import ThemeToggle from './components/ThemeToggle'
 
@@ -27,26 +25,15 @@ export default function App() {
   const [dark, setDark] = useState(systemDark)
   const [range, setRange] = useState<Range>('1Y')
   const [cryptoTab, setCryptoTab] = useState<CryptoTab>('BTC')
-  const [symbol, setSymbol] = useState<TickerSymbol>('BTC')
 
   const { data: btcData, loading: btcLoading, error: btcError } = useBtcData()
-  const { data: stockData, loading: stockLoading, error: stockError } = useStockOhlcData(cryptoTab === 'BTC' && symbol !== 'BTC' ? symbol : null)
   const { data: ethData, loading: ethLoading, error: ethError } = useCryptoOhlcData(cryptoTab === 'ETH' ? 'ETH-USDT' : null)
   const { data: solData, loading: solLoading, error: solError } = useCryptoOhlcData(cryptoTab === 'SOL' ? 'SOL-USDT' : null)
   const { data: mstrData } = useMstrData()
 
-  const data = cryptoTab === 'BTC'
-    ? (symbol === 'BTC' ? btcData : stockData)
-    : cryptoTab === 'ETH' ? ethData : solData
-  const loading = cryptoTab === 'BTC'
-    ? (symbol === 'BTC' ? btcLoading : stockLoading)
-    : cryptoTab === 'ETH' ? ethLoading : solLoading
-  const error = cryptoTab === 'BTC'
-    ? (symbol === 'BTC' ? btcError : stockError)
-    : cryptoTab === 'ETH' ? ethError : solError
-
-  // Derive the symbol label passed to Chart
-  const activeSymbol = cryptoTab !== 'BTC' ? cryptoTab : symbol
+  const data = cryptoTab === 'BTC' ? btcData : cryptoTab === 'ETH' ? ethData : solData
+  const loading = cryptoTab === 'BTC' ? btcLoading : cryptoTab === 'ETH' ? ethLoading : solLoading
+  const error = cryptoTab === 'BTC' ? btcError : cryptoTab === 'ETH' ? ethError : solError
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -68,7 +55,7 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight">Mike's BTC/MSTR Dashboard</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{activeSymbol} / USD · Moving Averages</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{cryptoTab} / USD · Moving Averages</p>
           </div>
         </div>
         <ThemeToggle dark={dark} onToggle={() => setDark((d) => !d)} />
@@ -77,8 +64,7 @@ export default function App() {
       <main className="p-6 flex flex-col gap-4" style={{ height: 'calc(100vh - 73px)' }}>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <CryptoTabSelector value={cryptoTab} onChange={(tab) => { setCryptoTab(tab); if (tab !== 'BTC') setSymbol('BTC') }} />
-            {cryptoTab === 'BTC' && <SymbolSelector value={symbol} onChange={setSymbol} />}
+            <CryptoTabSelector value={cryptoTab} onChange={setCryptoTab} />
             {loading && <span className="text-xs text-gray-400 dark:text-gray-500">Loading…</span>}
             {error && <span className="text-xs text-red-500">Error: {error}</span>}
           </div>
@@ -101,10 +87,10 @@ export default function App() {
               ma50={ma50}
               ma200d={ma200d}
               ma200w={ma200w}
-              mstr={cryptoTab === 'BTC' && symbol === 'BTC' ? mstrData : []}
+              mstr={cryptoTab === 'BTC' ? mstrData : []}
               deathCrosses={crosses}
               goldenCrosses={gCrosses}
-              symbol={activeSymbol}
+              symbol={cryptoTab}
               range={range}
               dark={dark}
             />
