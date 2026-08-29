@@ -5,6 +5,7 @@ import {
   LineSeries,
   LineStyle,
   type IChartApi,
+  type IPriceLine,
   type ISeriesApi,
   type CandlestickData,
   type LineData,
@@ -57,6 +58,8 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
   const ma200dRef = useRef<ISeriesApi<'Line'> | null>(null)
   const ma200wRef = useRef<ISeriesApi<'Line'> | null>(null)
   const mstrRef = useRef<ISeriesApi<'Line'> | null>(null)
+  const periodHighLineRef = useRef<IPriceLine | null>(null)
+  const periodLowLineRef = useRef<IPriceLine | null>(null)
 
   const [legendValues, setLegendValues] = useState<{
     price?: number; ma50?: number; ma200d?: number; ma200w?: number; mstr?: number
@@ -285,6 +288,50 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     }
     setTimeout(updateArrows, 50)
   }, [range, data, mstr, updateArrows])
+
+  // Mark the high and low of the selected graph period on the crypto price scale.
+  useEffect(() => {
+    if (!candleRef.current || data.length === 0) return
+
+    const candleSeries = candleRef.current
+    if (periodHighLineRef.current) candleSeries.removePriceLine(periodHighLineRef.current)
+    if (periodLowLineRef.current) candleSeries.removePriceLine(periodLowLineRef.current)
+
+    const last = data[data.length - 1].time
+    const secs = rangeToSeconds(range)
+    const periodData = secs === Infinity
+      ? data
+      : data.filter((point) => point.time >= last - secs)
+    if (periodData.length === 0) return
+
+    const high = periodData.reduce((maximum, point) => Math.max(maximum, point.high), Number.NEGATIVE_INFINITY)
+    const low = periodData.reduce((minimum, point) => Math.min(minimum, point.low), Number.POSITIVE_INFINITY)
+    const guideColor = dark ? '#94a3b8' : '#64748b'
+
+    periodHighLineRef.current = candleSeries.createPriceLine({
+      price: high,
+      color: guideColor,
+      lineWidth: 1,
+      lineStyle: LineStyle.Dashed,
+      axisLabelVisible: true,
+      title: 'Period high',
+    })
+    periodLowLineRef.current = candleSeries.createPriceLine({
+      price: low,
+      color: guideColor,
+      lineWidth: 1,
+      lineStyle: LineStyle.Dashed,
+      axisLabelVisible: true,
+      title: 'Period low',
+    })
+
+    return () => {
+      if (periodHighLineRef.current) candleSeries.removePriceLine(periodHighLineRef.current)
+      if (periodLowLineRef.current) candleSeries.removePriceLine(periodLowLineRef.current)
+      periodHighLineRef.current = null
+      periodLowLineRef.current = null
+    }
+  }, [data, range, dark])
 
   // Build price lookup for each cross (average of 50D and 200D at intersection)
   const ma50Map = new Map(ma50.map((p) => [p.time, p.value]))
