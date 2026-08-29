@@ -7,6 +7,7 @@ import { sma, deathCrosses, goldenCrosses } from './lib/indicators'
 import Chart from './components/Chart'
 import RangeSelector, { type Range } from './components/RangeSelector'
 import CryptoTabSelector, { type CryptoTab } from './components/CryptoTabSelector'
+import PerformanceSection from './components/PerformanceSection'
 import ThemeToggle from './components/ThemeToggle'
 
 function useSystemDark() {
@@ -110,6 +111,8 @@ export default function App() {
             />
           )}
         </div>
+
+        <PerformanceSection data={data} symbol={cryptoTab} />
 
         <div className="flex gap-6 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
           <span>Data source: OKX public API · ~1,800 daily candles</span>
