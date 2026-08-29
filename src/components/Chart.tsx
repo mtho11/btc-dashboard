@@ -108,10 +108,12 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       },
       crosshair: { mode: 1 },
       leftPriceScale: {
-        visible: true,
+        // MSTR uses this scale only on the BTC tab.
+        visible: false,
         borderColor: dark ? '#2d3148' : '#e2e8f0',
       },
       rightPriceScale: {
+        // BTC/ETH/SOL candles and all moving averages always use this scale.
         visible: true,
         borderColor: dark ? '#2d3148' : '#e2e8f0',
       },
@@ -260,7 +262,10 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
   useEffect(() => {
     if (!mstrRef.current || !chartRef.current) return
     mstrRef.current.setData(mstr.map((d) => ({ time: d.time as Time, value: d.value })))
-    chartRef.current.applyOptions({ leftPriceScale: { visible: mstr.length > 0 } })
+    chartRef.current.applyOptions({
+      leftPriceScale: { visible: mstr.length > 0 },
+      rightPriceScale: { visible: true },
+    })
   }, [mstr])
 
   // Reposition arrows when crosses or range changes
