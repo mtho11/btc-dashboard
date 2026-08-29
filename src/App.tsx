@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import './index.css'
 import { useBtcData } from './hooks/useBtcData'
-import { useMstrData } from './hooks/useMstrData'
 import { useCryptoOhlcData } from './hooks/useCryptoOhlcData'
 import { sma, deathCrosses, goldenCrosses } from './lib/indicators'
 import Chart from './components/Chart'
@@ -32,7 +31,6 @@ export default function App() {
   const { data: solData, loading: solLoading, error: solError } = useCryptoOhlcData(cryptoTab === 'SOL' ? 'SOL-USDT' : null)
   const { data: hypeData, loading: hypeLoading, error: hypeError } = useCryptoOhlcData(cryptoTab === 'HYPE' ? 'HYPE-USDT' : null)
   const { data: zecData, loading: zecLoading, error: zecError } = useCryptoOhlcData(cryptoTab === 'ZEC' ? 'ZEC-USDT' : null)
-  const { data: mstrData } = useMstrData()
 
   const data = cryptoTab === 'BTC' ? btcData
     : cryptoTab === 'ETH' ? ethData
@@ -102,7 +100,6 @@ export default function App() {
               ma50={ma50}
               ma200d={ma200d}
               ma200w={ma200w}
-              mstr={cryptoTab === 'BTC' ? mstrData : []}
               deathCrosses={crosses}
               goldenCrosses={gCrosses}
               symbol={cryptoTab}

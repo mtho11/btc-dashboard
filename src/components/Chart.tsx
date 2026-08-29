@@ -12,7 +12,6 @@ import {
   type Time,
 } from 'lightweight-charts'
 import type { OhlcPoint, LinePoint, CrossPoint } from '../lib/indicators'
-import type { DayClose } from '../hooks/useMstrData'
 import type { Range } from './RangeSelector'
 import Legend from './Legend'
 
@@ -20,7 +19,6 @@ const MA_COLORS = {
   ma50: '#f59e0b',
   ma200d: '#3b82f6',
   ma200w: '#a855f7',
-  mstr: '#f472b6',
 }
 
 function rangeToSeconds(range: Range): number {
@@ -41,7 +39,6 @@ interface ChartProps {
   ma50: LinePoint[]
   ma200d: LinePoint[]
   ma200w: LinePoint[]
-  mstr: DayClose[]
   deathCrosses: CrossPoint[]
   goldenCrosses: CrossPoint[]
   symbol: string
@@ -49,7 +46,7 @@ interface ChartProps {
   dark: boolean
 }
 
-export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, goldenCrosses, symbol, range, dark }: ChartProps) {
+export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, goldenCrosses, symbol, range, dark }: ChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
@@ -57,12 +54,11 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
   const ma50Ref = useRef<ISeriesApi<'Line'> | null>(null)
   const ma200dRef = useRef<ISeriesApi<'Line'> | null>(null)
   const ma200wRef = useRef<ISeriesApi<'Line'> | null>(null)
-  const mstrRef = useRef<ISeriesApi<'Line'> | null>(null)
   const periodHighLineRef = useRef<IPriceLine | null>(null)
   const periodLowLineRef = useRef<IPriceLine | null>(null)
 
   const [legendValues, setLegendValues] = useState<{
-    price?: number; ma50?: number; ma200d?: number; ma200w?: number; mstr?: number
+    price?: number; ma50?: number; ma200d?: number; ma200w?: number
   }>({})
 
   // Reposition all cross arrow overlays using chart coordinate APIs
@@ -110,11 +106,6 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
         horzLines: { color: dark ? '#1e2130' : '#f1f5f9' },
       },
       crosshair: { mode: 1 },
-      leftPriceScale: {
-        // MSTR uses this scale only on the BTC tab.
-        visible: false,
-        borderColor: dark ? '#2d3148' : '#e2e8f0',
-      },
       rightPriceScale: {
         // BTC/ETH/SOL candles and all moving averages always use this scale.
         visible: true,
@@ -165,22 +156,11 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       priceScaleId: 'right',
     })
 
-    const mstrSeries = chart.addSeries(LineSeries, {
-      color: MA_COLORS.mstr,
-      lineWidth: 2,
-      lineStyle: LineStyle.Dashed,
-      priceLineVisible: false,
-      lastValueVisible: true,
-      crosshairMarkerVisible: true,
-      priceScaleId: 'left',
-    })
-
     chartRef.current = chart
     candleRef.current = candleSeries
     ma50Ref.current = ma50Series
     ma200dRef.current = ma200dSeries
     ma200wRef.current = ma200wSeries
-    mstrRef.current = mstrSeries
 
     chart.subscribeCrosshairMove((param) => {
       if (!param.time) {
@@ -195,7 +175,6 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
         ma50: getLine(ma50Series),
         ma200d: getLine(ma200dSeries),
         ma200w: getLine(ma200wSeries),
-        mstr: getLine(mstrSeries),
       })
     })
 
@@ -229,7 +208,6 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
         vertLines: { color: dark ? '#1e2130' : '#f1f5f9' },
         horzLines: { color: dark ? '#1e2130' : '#f1f5f9' },
       },
-      leftPriceScale: { borderColor: dark ? '#2d3148' : '#e2e8f0' },
       rightPriceScale: { borderColor: dark ? '#2d3148' : '#e2e8f0' },
       timeScale: { borderColor: dark ? '#2d3148' : '#e2e8f0' },
     })
@@ -261,16 +239,6 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
     return () => cancelAnimationFrame(raf)
   }, [data, ma50, ma200d, ma200w, range, updateArrows])
 
-  // Update MSTR data and toggle its left-side price scale visibility.
-  useEffect(() => {
-    if (!mstrRef.current || !chartRef.current) return
-    mstrRef.current.setData(mstr.map((d) => ({ time: d.time as Time, value: d.value })))
-    chartRef.current.applyOptions({
-      leftPriceScale: { visible: mstr.length > 0 },
-      rightPriceScale: { visible: true },
-    })
-  }, [mstr])
-
   // Reposition arrows when crosses or range changes
   useEffect(() => {
     setTimeout(updateArrows, 50)
@@ -287,7 +255,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
       chartRef.current.timeScale().setVisibleRange({ from: (last - secs) as Time, to: last as Time })
     }
     setTimeout(updateArrows, 50)
-  }, [range, data, mstr, updateArrows])
+  }, [range, data, updateArrows])
 
   // Mark the high and low of the selected graph period on the crypto price scale.
   useEffect(() => {
@@ -346,14 +314,12 @@ export default function Chart({ data, ma50, ma200d, ma200w, mstr, deathCrosses, 
   const lastMa50 = ma50.length ? ma50[ma50.length - 1].value : undefined
   const lastMa200d = ma200d.length ? ma200d[ma200d.length - 1].value : undefined
   const lastMa200w = ma200w.length ? ma200w[ma200w.length - 1].value : undefined
-  const lastMstr = mstr.length ? mstr[mstr.length - 1].value : undefined
 
   const legendItems = [
     { label: symbol === 'BTC' ? 'BTC/USD' : symbol, color: '#22c55e', value: legendValues.price ?? lastPrice },
     { label: '50D MA', color: MA_COLORS.ma50, value: legendValues.ma50 ?? lastMa50 },
     { label: '200D MA', color: MA_COLORS.ma200d, value: legendValues.ma200d ?? lastMa200d },
     { label: '200W MA', color: MA_COLORS.ma200w, value: legendValues.ma200w ?? lastMa200w },
-    ...(symbol === 'BTC' ? [{ label: 'MSTR', color: MA_COLORS.mstr, value: legendValues.mstr ?? lastMstr, dashed: true }] : []),
   ]
 
   return (
