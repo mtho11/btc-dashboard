@@ -29,11 +29,25 @@ export default function App() {
   const { data: btcData, loading: btcLoading, error: btcError } = useBtcData()
   const { data: ethData, loading: ethLoading, error: ethError } = useCryptoOhlcData(cryptoTab === 'ETH' ? 'ETH-USDT' : null)
   const { data: solData, loading: solLoading, error: solError } = useCryptoOhlcData(cryptoTab === 'SOL' ? 'SOL-USDT' : null)
+  const { data: hypeData, loading: hypeLoading, error: hypeError } = useCryptoOhlcData(cryptoTab === 'HYPE' ? 'HYPE-USDT' : null)
+  const { data: zecData, loading: zecLoading, error: zecError } = useCryptoOhlcData(cryptoTab === 'ZEC' ? 'ZEC-USDT' : null)
   const { data: mstrData } = useMstrData()
 
-  const data = cryptoTab === 'BTC' ? btcData : cryptoTab === 'ETH' ? ethData : solData
-  const loading = cryptoTab === 'BTC' ? btcLoading : cryptoTab === 'ETH' ? ethLoading : solLoading
-  const error = cryptoTab === 'BTC' ? btcError : cryptoTab === 'ETH' ? ethError : solError
+  const data = cryptoTab === 'BTC' ? btcData
+    : cryptoTab === 'ETH' ? ethData
+    : cryptoTab === 'SOL' ? solData
+    : cryptoTab === 'HYPE' ? hypeData
+    : zecData
+  const loading = cryptoTab === 'BTC' ? btcLoading
+    : cryptoTab === 'ETH' ? ethLoading
+    : cryptoTab === 'SOL' ? solLoading
+    : cryptoTab === 'HYPE' ? hypeLoading
+    : zecLoading
+  const error = cryptoTab === 'BTC' ? btcError
+    : cryptoTab === 'ETH' ? ethError
+    : cryptoTab === 'SOL' ? solError
+    : cryptoTab === 'HYPE' ? hypeError
+    : zecError
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)

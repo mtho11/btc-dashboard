@@ -1,6 +1,6 @@
-export type CryptoTab = 'BTC' | 'ETH' | 'SOL'
+export type CryptoTab = 'BTC' | 'ETH' | 'SOL' | 'HYPE' | 'ZEC'
 
-const TABS: CryptoTab[] = ['BTC', 'ETH', 'SOL']
+const TABS: CryptoTab[] = ['BTC', 'ETH', 'SOL', 'HYPE', 'ZEC']
 
 interface CryptoTabSelectorProps {
   value: CryptoTab
