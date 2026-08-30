@@ -1,6 +1,10 @@
 export type CryptoTab = 'BTC' | 'ETH' | 'SOL' | 'HYPE' | 'ZEC'
 
-const TABS: CryptoTab[] = ['BTC', 'ETH', 'SOL', 'HYPE', 'ZEC']
+export const CRYPTO_TABS: CryptoTab[] = ['BTC', 'ETH', 'SOL', 'HYPE', 'ZEC']
+
+export function isCryptoTab(value: string | null): value is CryptoTab {
+  return value !== null && CRYPTO_TABS.includes(value as CryptoTab)
+}
 
 interface CryptoTabSelectorProps {
   value: CryptoTab
@@ -10,7 +14,7 @@ interface CryptoTabSelectorProps {
 export default function CryptoTabSelector({ value, onChange }: CryptoTabSelectorProps) {
   return (
     <div className="flex gap-1 bg-gray-100 dark:bg-gray-800/60 p-1 rounded-lg">
-      {TABS.map((tab) => (
+      {CRYPTO_TABS.map((tab) => (
         <button
           key={tab}
           onClick={() => onChange(tab)}

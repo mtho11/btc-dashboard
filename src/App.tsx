@@ -5,7 +5,7 @@ import { useCryptoOhlcData } from './hooks/useCryptoOhlcData'
 import { sma, deathCrosses, goldenCrosses } from './lib/indicators'
 import Chart from './components/Chart'
 import RangeSelector, { type Range } from './components/RangeSelector'
-import CryptoTabSelector, { type CryptoTab } from './components/CryptoTabSelector'
+import CryptoTabSelector, { isCryptoTab, type CryptoTab } from './components/CryptoTabSelector'
 import PerformanceSection from './components/PerformanceSection'
 import ThemeToggle from './components/ThemeToggle'
 
@@ -24,7 +24,10 @@ export default function App() {
   const systemDark = useSystemDark()
   const [dark, setDark] = useState(systemDark)
   const [range, setRange] = useState<Range>('1Y')
-  const [cryptoTab, setCryptoTab] = useState<CryptoTab>('BTC')
+  const [cryptoTab, setCryptoTab] = useState<CryptoTab>(() => {
+    const asset = new URLSearchParams(window.location.search).get('asset')
+    return isCryptoTab(asset) ? asset : 'BTC'
+  })
 
   const { data: btcData, loading: btcLoading, error: btcError } = useBtcData()
   const { data: ethData, loading: ethLoading, error: ethError } = useCryptoOhlcData(cryptoTab === 'ETH' ? 'ETH-USDT' : null)
@@ -52,6 +55,22 @@ export default function App() {
     document.documentElement.classList.toggle('dark', dark)
   }, [dark])
 
+  useEffect(() => {
+    const syncFromUrl = () => {
+      const asset = new URLSearchParams(window.location.search).get('asset')
+      if (isCryptoTab(asset)) setCryptoTab(asset)
+    }
+    window.addEventListener('popstate', syncFromUrl)
+    return () => window.removeEventListener('popstate', syncFromUrl)
+  }, [])
+
+  const selectCryptoTab = (tab: CryptoTab) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('asset', tab)
+    window.history.pushState({}, '', url)
+    setCryptoTab(tab)
+  }
+
   // Compute MAs over the FULL dataset for accurate values even when zoomed in
   const ma50 = useMemo(() => sma(data, 50), [data])
   const ma200d = useMemo(() => sma(data, 200), [data])
@@ -77,7 +96,7 @@ export default function App() {
       <main className="p-6 flex flex-col gap-4" style={{ height: 'calc(100vh - 73px)' }}>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <CryptoTabSelector value={cryptoTab} onChange={setCryptoTab} />
+            <CryptoTabSelector value={cryptoTab} onChange={selectCryptoTab} />
             {loading && <span className="text-xs text-gray-400 dark:text-gray-500">Loading…</span>}
             {error && <span className="text-xs text-red-500">Error: {error}</span>}
           </div>
