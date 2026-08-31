@@ -4,7 +4,7 @@ import { useBtcData } from './hooks/useBtcData'
 import { useCryptoOhlcData } from './hooks/useCryptoOhlcData'
 import { sma, deathCrosses, goldenCrosses } from './lib/indicators'
 import Chart from './components/Chart'
-import RangeSelector, { type Range } from './components/RangeSelector'
+import RangeSelector, { isRange, type Range } from './components/RangeSelector'
 import CryptoTabSelector, { isCryptoTab, type CryptoTab } from './components/CryptoTabSelector'
 import PerformanceSection from './components/PerformanceSection'
 import ThemeToggle from './components/ThemeToggle'
@@ -23,7 +23,10 @@ function useSystemDark() {
 export default function App() {
   const systemDark = useSystemDark()
   const [dark, setDark] = useState(systemDark)
-  const [range, setRange] = useState<Range>('1Y')
+  const [range, setRange] = useState<Range>(() => {
+    const timeframe = new URLSearchParams(window.location.search).get('range')
+    return isRange(timeframe) ? timeframe : '1Y'
+  })
   const [cryptoTab, setCryptoTab] = useState<CryptoTab>(() => {
     const asset = new URLSearchParams(window.location.search).get('asset')
     return isCryptoTab(asset) ? asset : 'BTC'
@@ -57,8 +60,11 @@ export default function App() {
 
   useEffect(() => {
     const syncFromUrl = () => {
-      const asset = new URLSearchParams(window.location.search).get('asset')
+      const params = new URLSearchParams(window.location.search)
+      const asset = params.get('asset')
+      const timeframe = params.get('range')
       if (isCryptoTab(asset)) setCryptoTab(asset)
+      if (isRange(timeframe)) setRange(timeframe)
     }
     window.addEventListener('popstate', syncFromUrl)
     return () => window.removeEventListener('popstate', syncFromUrl)
@@ -69,6 +75,13 @@ export default function App() {
     url.searchParams.set('asset', tab)
     window.history.pushState({}, '', url)
     setCryptoTab(tab)
+  }
+
+  const selectRange = (timeframe: Range) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('range', timeframe)
+    window.history.pushState({}, '', url)
+    setRange(timeframe)
   }
 
   // Compute MAs over the FULL dataset for accurate values even when zoomed in
@@ -100,7 +113,7 @@ export default function App() {
             {loading && <span className="text-xs text-gray-400 dark:text-gray-500">Loading…</span>}
             {error && <span className="text-xs text-red-500">Error: {error}</span>}
           </div>
-          <RangeSelector value={range} onChange={setRange} />
+          <RangeSelector value={range} onChange={selectRange} />
         </div>
 
         <div className="flex-1 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 overflow-hidden shadow-sm">
