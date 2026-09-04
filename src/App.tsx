@@ -4,7 +4,7 @@ import { useBtcData } from './hooks/useBtcData'
 import { useCryptoOhlcData } from './hooks/useCryptoOhlcData'
 import { useStaticOhlcData } from './hooks/useStaticOhlcData'
 import { useM2Data } from './hooks/useM2Data'
-import { sma, deathCrosses, goldenCrosses } from './lib/indicators'
+import { sma, deathCrosses, goldenCrosses, priceAboveMa, priceBelowMa } from './lib/indicators'
 import Chart from './components/Chart'
 import AllAssetsChart from './components/AllAssetsChart'
 import RangeSelector, { isRange, type Range } from './components/RangeSelector'
@@ -123,6 +123,8 @@ export default function App() {
   const ma200w = useMemo(() => sma(data, 1400), [data])
   const crosses = useMemo(() => deathCrosses(ma50, ma200d), [ma50, ma200d])
   const gCrosses = useMemo(() => goldenCrosses(ma50, ma200d), [ma50, ma200d])
+  const priceBuys = useMemo(() => priceAboveMa(data, ma50), [data, ma50])
+  const priceSells = useMemo(() => priceBelowMa(data, ma50), [data, ma50])
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-200">
@@ -187,6 +189,8 @@ export default function App() {
               ma200w={ma200w}
               deathCrosses={crosses}
               goldenCrosses={gCrosses}
+              priceBuys={priceBuys}
+              priceSells={priceSells}
               m2={m2Data}
               symbol={cryptoTab}
               range={range}

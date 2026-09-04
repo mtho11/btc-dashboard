@@ -43,6 +43,32 @@ export function goldenCrosses(fast: LinePoint[], slow: LinePoint[]): CrossPoint[
   return _crosses(fast, slow, 'above')
 }
 
+// Price crosses above MA = soft buy signal
+export function priceAboveMa(data: OhlcPoint[], ma: LinePoint[]): CrossPoint[] {
+  const maMap = new Map(ma.map((p) => [p.time, p.value]))
+  const crosses: CrossPoint[] = []
+  for (let i = 1; i < data.length; i++) {
+    const prevMa = maMap.get(data[i - 1].time)
+    const currMa = maMap.get(data[i].time)
+    if (prevMa == null || currMa == null) continue
+    if (data[i - 1].close <= prevMa && data[i].close > currMa) crosses.push({ time: data[i].time })
+  }
+  return crosses
+}
+
+// Price crosses below MA = soft sell signal
+export function priceBelowMa(data: OhlcPoint[], ma: LinePoint[]): CrossPoint[] {
+  const maMap = new Map(ma.map((p) => [p.time, p.value]))
+  const crosses: CrossPoint[] = []
+  for (let i = 1; i < data.length; i++) {
+    const prevMa = maMap.get(data[i - 1].time)
+    const currMa = maMap.get(data[i].time)
+    if (prevMa == null || currMa == null) continue
+    if (data[i - 1].close >= prevMa && data[i].close < currMa) crosses.push({ time: data[i].time })
+  }
+  return crosses
+}
+
 export function sma(data: OhlcPoint[], period: number): LinePoint[] {
   const result: LinePoint[] = []
   for (let i = period - 1; i < data.length; i++) {

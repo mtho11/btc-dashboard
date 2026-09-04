@@ -40,13 +40,15 @@ interface ChartProps {
   ma200w: LinePoint[]
   deathCrosses: CrossPoint[]
   goldenCrosses: CrossPoint[]
+  priceBuys: CrossPoint[]
+  priceSells: CrossPoint[]
   m2: LinePoint[]
   symbol: string
   range: Range
   dark: boolean
 }
 
-export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, goldenCrosses, m2, symbol, range, dark }: ChartProps) {
+export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, goldenCrosses, priceBuys, priceSells, m2, symbol, range, dark }: ChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
@@ -85,7 +87,8 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
       }
     }
 
-    if (deathCrosses.length === 0 && goldenCrosses.length === 0) return
+    const hasAnyCrosses = deathCrosses.length > 0 || goldenCrosses.length > 0 || priceBuys.length > 0 || priceSells.length > 0
+    if (!hasAnyCrosses) return
 
     const position = (time: Time, price: number) => {
       const x = ts.timeToCoordinate(time)
@@ -105,10 +108,19 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
       const { x, y, ok } = position(Number(el.dataset.line) as Time, Number(el.dataset.price))
       if (!ok) { el.style.display = 'none'; return }
       el.style.display = 'block'
-      el.style.left = `${x! + leftOffset}px` // centered on the 16px arrow
+      el.style.left = `${x! + leftOffset}px`
       el.style.top = `${y!}px`
     })
-  }, [deathCrosses, goldenCrosses])
+
+    // Price/50D MA cross dots
+    overlayRef.current.querySelectorAll<HTMLElement>('[data-pdot]').forEach((el) => {
+      const { x, y, ok } = position(Number(el.dataset.pdot) as Time, Number(el.dataset.price))
+      if (!ok) { el.style.display = 'none'; return }
+      el.style.display = 'block'
+      el.style.left = `${x! + leftOffset - 5}px`
+      el.style.top = `${y! - 5}px`
+    })
+  }, [deathCrosses, goldenCrosses, priceBuys, priceSells])
 
   // Init chart once
   useEffect(() => {
@@ -287,7 +299,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
   // Reposition arrows when crosses or range changes
   useEffect(() => {
     setTimeout(updateArrows, 50)
-  }, [deathCrosses, goldenCrosses, range, updateArrows])
+  }, [deathCrosses, goldenCrosses, priceBuys, priceSells, range, updateArrows])
 
   // Re-apply range when user changes the range selector (data hasn't changed, so no RAF needed)
   useEffect(() => {
@@ -414,6 +426,22 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
             <div key={`gl-${c.time}`} data-line={c.time} data-price={avgPrice(c)}
               className="absolute" style={{ display: 'none', width: '1px', bottom: '28px',
                 borderLeft: '1px dashed rgba(34,197,94,0.5)' }} />
+          ))}
+          {/* Price/50D MA cross dots — soft buy (green) */}
+          {priceBuys.map((c) => (
+            <div key={`pb-${c.time}`} data-pdot={c.time} data-price={ma50Map.get(c.time) ?? 0}
+              className="absolute rounded-full"
+              style={{ display: 'none', width: 10, height: 10,
+                background: 'rgba(34,197,94,0.85)', border: '1.5px solid rgba(34,197,94,0.4)',
+                boxShadow: '0 0 4px rgba(34,197,94,0.5)' }} />
+          ))}
+          {/* Price/50D MA cross dots — soft sell (red) */}
+          {priceSells.map((c) => (
+            <div key={`ps-${c.time}`} data-pdot={c.time} data-price={ma50Map.get(c.time) ?? 0}
+              className="absolute rounded-full"
+              style={{ display: 'none', width: 10, height: 10,
+                background: 'rgba(239,68,68,0.85)', border: '1.5px solid rgba(239,68,68,0.4)',
+                boxShadow: '0 0 4px rgba(239,68,68,0.5)' }} />
           ))}
         </div>
       </div>
