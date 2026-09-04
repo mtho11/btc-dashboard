@@ -41,12 +41,13 @@ interface ChartProps {
   ma200w: LinePoint[]
   deathCrosses: CrossPoint[]
   goldenCrosses: CrossPoint[]
+  m2: LinePoint[]
   symbol: string
   range: Range
   dark: boolean
 }
 
-export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, goldenCrosses, symbol, range, dark }: ChartProps) {
+export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, goldenCrosses, m2, symbol, range, dark }: ChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
@@ -54,11 +55,12 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
   const ma50Ref = useRef<ISeriesApi<'Line'> | null>(null)
   const ma200dRef = useRef<ISeriesApi<'Line'> | null>(null)
   const ma200wRef = useRef<ISeriesApi<'Line'> | null>(null)
+  const m2Ref = useRef<ISeriesApi<'Line'> | null>(null)
   const periodHighLineRef = useRef<IPriceLine | null>(null)
   const periodLowLineRef = useRef<IPriceLine | null>(null)
 
   const [legendValues, setLegendValues] = useState<{
-    price?: number; ma50?: number; ma200d?: number; ma200w?: number
+    price?: number; ma50?: number; ma200d?: number; ma200w?: number; m2?: number
   }>({})
 
   // Reposition all cross arrow overlays using chart coordinate APIs
@@ -67,7 +69,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
     if (deathCrosses.length === 0 && goldenCrosses.length === 0) return
     const ts = chartRef.current.timeScale()
     // timeToCoordinate returns x relative to the chart pane (after left price scale)
-    const leftOffset = chartRef.current.priceScale('left').width()
+    const leftOffset = (() => { try { return chartRef.current!.priceScale('left').width() } catch { return 0 } })()
 
     const position = (time: Time, price: number) => {
       const x = ts.timeToCoordinate(time)
@@ -106,6 +108,11 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
         horzLines: { color: dark ? '#1e2130' : '#f1f5f9' },
       },
       crosshair: { mode: 1 },
+      leftPriceScale: {
+        visible: false,
+        borderColor: dark ? '#2d3148' : '#e2e8f0',
+        scaleMargins: { top: 0.1, bottom: 0.1 },
+      },
       rightPriceScale: {
         // BTC/ETH/SOL candles and all moving averages always use this scale.
         visible: true,
@@ -156,11 +163,22 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
       priceScaleId: 'right',
     })
 
+    const m2Series = chart.addSeries(LineSeries, {
+      color: '#ec4899',
+      lineWidth: 1,
+      lineStyle: LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      crosshairMarkerVisible: false,
+      priceScaleId: 'left',
+    })
+
     chartRef.current = chart
     candleRef.current = candleSeries
     ma50Ref.current = ma50Series
     ma200dRef.current = ma200dSeries
     ma200wRef.current = ma200wSeries
+    m2Ref.current = m2Series
 
     chart.subscribeCrosshairMove((param) => {
       if (!param.time) {
@@ -175,6 +193,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
         ma50: getLine(ma50Series),
         ma200d: getLine(ma200dSeries),
         ma200w: getLine(ma200wSeries),
+        m2: getLine(m2Series),
       })
     })
 
@@ -208,10 +227,18 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
         vertLines: { color: dark ? '#1e2130' : '#f1f5f9' },
         horzLines: { color: dark ? '#1e2130' : '#f1f5f9' },
       },
+      leftPriceScale: { borderColor: dark ? '#2d3148' : '#e2e8f0' },
       rightPriceScale: { borderColor: dark ? '#2d3148' : '#e2e8f0' },
       timeScale: { borderColor: dark ? '#2d3148' : '#e2e8f0' },
     })
   }, [dark])
+
+  // M2 money supply overlay
+  useEffect(() => {
+    if (!m2Ref.current || !chartRef.current) return
+    m2Ref.current.setData(m2.map((d) => ({ time: d.time as Time, value: d.value })))
+    chartRef.current.applyOptions({ leftPriceScale: { visible: m2.length > 0 } })
+  }, [m2])
 
   // Update series data and immediately apply range to beat lwc's async auto-fit
   useEffect(() => {
@@ -314,12 +341,16 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
   const lastMa50 = ma50.length ? ma50[ma50.length - 1].value : undefined
   const lastMa200d = ma200d.length ? ma200d[ma200d.length - 1].value : undefined
   const lastMa200w = ma200w.length ? ma200w[ma200w.length - 1].value : undefined
+  const lastM2 = m2.length ? m2[m2.length - 1].value : undefined
 
   const legendItems = [
     { label: symbol === 'BTC' ? 'BTC/USD' : symbol, color: '#22c55e', value: legendValues.price ?? lastPrice },
     { label: '50D MA', color: MA_COLORS.ma50, value: legendValues.ma50 ?? lastMa50 },
     { label: '200D MA', color: MA_COLORS.ma200d, value: legendValues.ma200d ?? lastMa200d },
     { label: '200W MA', color: MA_COLORS.ma200w, value: legendValues.ma200w ?? lastMa200w },
+    ...(lastM2 !== undefined
+      ? [{ label: 'M2 Supply', color: '#ec4899', value: legendValues.m2 ?? lastM2, dashed: true }]
+      : []),
   ]
 
   return (

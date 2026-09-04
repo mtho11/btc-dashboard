@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import './index.css'
 import { useBtcData } from './hooks/useBtcData'
 import { useCryptoOhlcData } from './hooks/useCryptoOhlcData'
+import { useM2Data } from './hooks/useM2Data'
 import { sma, deathCrosses, goldenCrosses } from './lib/indicators'
 import Chart from './components/Chart'
 import RangeSelector, { isRange, type Range } from './components/RangeSelector'
@@ -32,6 +33,7 @@ export default function App() {
     return isCryptoTab(asset) ? asset : 'BTC'
   })
 
+  const m2Data = useM2Data()
   const { data: btcData, loading: btcLoading, error: btcError } = useBtcData()
   const { data: ethData, loading: ethLoading, error: ethError } = useCryptoOhlcData(cryptoTab === 'ETH' ? 'ETH-USDT' : null)
   const { data: solData, loading: solLoading, error: solError } = useCryptoOhlcData(cryptoTab === 'SOL' ? 'SOL-USDT' : null)
@@ -134,6 +136,7 @@ export default function App() {
               ma200w={ma200w}
               deathCrosses={crosses}
               goldenCrosses={gCrosses}
+              m2={m2Data}
               symbol={cryptoTab}
               range={range}
               dark={dark}
