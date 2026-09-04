@@ -7,10 +7,14 @@ const BATCHES = 6
 
 const cache: Record<string, OhlcPoint[]> = {}
 
-async function fetchBatch(instId: string, after?: string): Promise<OhlcPoint[]> {
+async function fetchBatch(instId: string, after?: string, attempt = 0): Promise<OhlcPoint[]> {
   const params = new URLSearchParams({ instId, bar: '1D', limit: String(BATCH) })
   if (after) params.set('after', after)
   const res = await fetch(`${OKX}?${params}`)
+  if (res.status === 429 && attempt < 3) {
+    await new Promise(r => setTimeout(r, 2000 * (attempt + 1)))
+    return fetchBatch(instId, after, attempt + 1)
+  }
   if (!res.ok) throw new Error(`OKX HTTP ${res.status}`)
   const json: { data: string[][] } = await res.json()
   return json.data.map((k) => ({
@@ -22,7 +26,7 @@ async function fetchBatch(instId: string, after?: string): Promise<OhlcPoint[]> 
   }))
 }
 
-export function useCryptoOhlcData(instId: string | null) {
+export function useCryptoOhlcData(instId: string | null, delayMs = 0) {
   const [data, setData] = useState<OhlcPoint[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,6 +41,9 @@ export function useCryptoOhlcData(instId: string | null) {
 
     async function fetchData() {
       try {
+        if (delayMs > 0) await new Promise(r => setTimeout(r, delayMs))
+        if (cancelled) return
+
         const allPoints: OhlcPoint[] = []
         let after: string | undefined
 
