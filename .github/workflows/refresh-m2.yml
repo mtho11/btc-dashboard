@@ -2,7 +2,7 @@ name: Refresh Market Data
 
 on:
   schedule:
-    - cron: '0 6 * * 1'  # Every Monday at 6am UTC
+    - cron: '0 6 * * *'  # Every day at 6am UTC (after prior day's market close)
   workflow_dispatch:       # Allow manual trigger
 
 jobs:
