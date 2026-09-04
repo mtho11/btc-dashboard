@@ -40,7 +40,8 @@ export default function App() {
   const { data: solData, loading: solLoading, error: solError } = useCryptoOhlcData(cryptoTab === 'SOL' ? 'SOL-USDT' : null)
   const { data: hypeData, loading: hypeLoading, error: hypeError } = useCryptoOhlcData(cryptoTab === 'HYPE' ? 'HYPE-USDT' : null)
   const { data: zecData, loading: zecLoading, error: zecError } = useCryptoOhlcData(cryptoTab === 'ZEC' ? 'ZEC-USDT' : null)
-  const { data: goldData, loading: goldLoading, error: goldError } = useStaticOhlcData(cryptoTab === 'GOLD' ? 'gold.json' : null)
+  // PAXG (PAX Gold) = 1 troy oz gold, trades on OKX — same live API as BTC/ETH/SOL
+  const { data: goldData, loading: goldLoading, error: goldError } = useCryptoOhlcData(cryptoTab === 'GOLD' ? 'PAXG-USDT' : null)
   const { data: silverData, loading: silverLoading, error: silverError } = useStaticOhlcData(cryptoTab === 'SILVER' ? 'silver.json' : null)
 
   const data = cryptoTab === 'BTC' ? btcData
