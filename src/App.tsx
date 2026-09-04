@@ -11,6 +11,7 @@ import RangeSelector, { isRange, type Range } from './components/RangeSelector'
 import CryptoTabSelector, { isCryptoTab, type CryptoTab } from './components/CryptoTabSelector'
 import PerformanceSection from './components/PerformanceSection'
 import ThemeToggle from './components/ThemeToggle'
+import Guide from './components/Guide'
 
 function useSystemDark() {
   const [dark, setDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -34,6 +35,14 @@ export default function App() {
     const asset = new URLSearchParams(window.location.search).get('asset')
     return isCryptoTab(asset) ? asset : 'BTC'
   })
+
+  const [showGuide, setShowGuide] = useState(() => {
+    try { return !localStorage.getItem('mtt_guide_seen') } catch { return false }
+  })
+  const closeGuide = () => {
+    try { localStorage.setItem('mtt_guide_seen', '1') } catch {}
+    setShowGuide(false)
+  }
 
   const m2Data = useM2Data()
   const { data: btcData, loading: btcLoading, error: btcError } = useBtcData()
@@ -131,7 +140,15 @@ export default function App() {
             </p>
           </div>
         </div>
-        <ThemeToggle dark={dark} onToggle={() => setDark((d) => !d)} />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowGuide(true)}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-500"
+          >
+            Guide
+          </button>
+          <ThemeToggle dark={dark} onToggle={() => setDark((d) => !d)} />
+        </div>
       </header>
 
       <main className="p-6 flex flex-col gap-4" style={{ height: 'calc(100vh - 73px)' }}>
@@ -194,6 +211,8 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {showGuide && <Guide onClose={closeGuide} />}
     </div>
   )
 }
