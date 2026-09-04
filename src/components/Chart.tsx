@@ -56,6 +56,8 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
   const ma200dRef = useRef<ISeriesApi<'Line'> | null>(null)
   const ma200wRef = useRef<ISeriesApi<'Line'> | null>(null)
   const m2Ref = useRef<ISeriesApi<'Line'> | null>(null)
+  const m2LastRef = useRef<{ time: number; value: number } | null>(null)
+  const m2LabelRef = useRef<HTMLDivElement | null>(null)
   const periodHighLineRef = useRef<IPriceLine | null>(null)
   const periodLowLineRef = useRef<IPriceLine | null>(null)
 
@@ -63,13 +65,28 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
     price?: number; ma50?: number; ma200d?: number; ma200w?: number; m2?: number
   }>({})
 
-  // Reposition all cross arrow overlays using chart coordinate APIs
+  // Reposition all cross arrow overlays and M2 label using chart coordinate APIs
   const updateArrows = useCallback(() => {
     if (!chartRef.current || !ma50Ref.current || !overlayRef.current) return
-    if (deathCrosses.length === 0 && goldenCrosses.length === 0) return
     const ts = chartRef.current.timeScale()
     // timeToCoordinate returns x relative to the chart pane (after left price scale)
     const leftOffset = (() => { try { return chartRef.current!.priceScale('left').width() } catch { return 0 } })()
+
+    // Reposition M2 label at the last M2 data point
+    if (m2LabelRef.current && m2LastRef.current && m2Ref.current) {
+      const { time, value } = m2LastRef.current
+      const x = ts.timeToCoordinate(time as Time)
+      const y = m2Ref.current.priceToCoordinate(value)
+      if (x !== null && y !== null) {
+        m2LabelRef.current.style.display = 'block'
+        m2LabelRef.current.style.left = `${x + leftOffset + 4}px`
+        m2LabelRef.current.style.top = `${y - 8}px`
+      } else {
+        m2LabelRef.current.style.display = 'none'
+      }
+    }
+
+    if (deathCrosses.length === 0 && goldenCrosses.length === 0) return
 
     const position = (time: Time, price: number) => {
       const x = ts.timeToCoordinate(time)
@@ -164,7 +181,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
     })
 
     const m2Series = chart.addSeries(LineSeries, {
-      color: '#ec4899',
+      color: 'rgba(236, 72, 153, 0.35)',
       lineWidth: 1,
       lineStyle: LineStyle.Dashed,
       priceLineVisible: false,
@@ -238,7 +255,9 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
     if (!m2Ref.current || !chartRef.current) return
     m2Ref.current.setData(m2.map((d) => ({ time: d.time as Time, value: d.value })))
     chartRef.current.applyOptions({ leftPriceScale: { visible: m2.length > 0 } })
-  }, [m2])
+    m2LastRef.current = m2.length > 0 ? m2[m2.length - 1] : null
+    setTimeout(updateArrows, 50)
+  }, [m2, updateArrows])
 
   // Update series data and immediately apply range to beat lwc's async auto-fit
   useEffect(() => {
@@ -349,7 +368,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
     { label: '200D MA', color: MA_COLORS.ma200d, value: legendValues.ma200d ?? lastMa200d },
     { label: '200W MA', color: MA_COLORS.ma200w, value: legendValues.ma200w ?? lastMa200w },
     ...(lastM2 !== undefined
-      ? [{ label: 'M2 Supply', color: '#ec4899', value: legendValues.m2 ?? lastM2, dashed: true }]
+      ? [{ label: 'M2 Supply', color: 'rgba(236, 72, 153, 0.7)', value: legendValues.m2 ?? lastM2, dashed: true }]
       : []),
   ]
 
@@ -358,6 +377,11 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
       <Legend items={legendItems} />
       <div className="flex-1 w-full relative">
         <div ref={containerRef} className="absolute inset-0" />
+        {/* M2 label pinned to the last M2 data point */}
+        <div ref={m2LabelRef} className="absolute text-xs font-semibold pointer-events-none"
+          style={{ color: 'rgba(236, 72, 153, 0.8)', display: 'none', whiteSpace: 'nowrap' }}>
+          M2
+        </div>
         {/* Cross arrow overlays (death = red down, golden = green up) */}
         <div ref={overlayRef} className="absolute inset-0 pointer-events-none overflow-hidden">
           {/* Death cross arrows */}
