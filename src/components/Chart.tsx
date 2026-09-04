@@ -30,7 +30,6 @@ function rangeToSeconds(range: Range): number {
     case '1Y': return 365 * DAY
     case '2Y': return 730 * DAY
     case '5Y': return 1825 * DAY
-    case 'ALL': return Infinity
   }
 }
 

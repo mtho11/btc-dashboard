@@ -1,6 +1,6 @@
-export type Range = '1M' | '3M' | '6M' | '1Y' | '2Y' | '5Y' | 'ALL'
+export type Range = '1M' | '3M' | '6M' | '1Y' | '2Y' | '5Y'
 
-export const RANGES: Range[] = ['1M', '3M', '6M', '1Y', '2Y', '5Y', 'ALL']
+export const RANGES: Range[] = ['1M', '3M', '6M', '1Y', '2Y', '5Y']
 
 export function isRange(value: string | null): value is Range {
   return value !== null && RANGES.includes(value as Range)
