@@ -35,12 +35,43 @@ interface Props {
 
 type LegendEntry = { label: string; color: string; value: number; winner: boolean }
 
+function applyLineStyles(
+  seriesMap: Record<string, ISeriesApi<'Line'>>,
+  highlighted: string | null,
+  winner: string | null,
+) {
+  for (const [label, series] of Object.entries(seriesMap)) {
+    const color = ASSET_COLORS[label] ?? '#888888'
+    if (highlighted) {
+      // hover mode: highlighted = bright thick, rest very faded
+      series.applyOptions({
+        color: label === highlighted ? color : color + '28',
+        lineWidth: label === highlighted ? 3 : 1,
+      })
+    } else {
+      // default mode: winner bright thick, rest lightly faded
+      series.applyOptions({
+        color: label === winner ? color : color + '55',
+        lineWidth: label === winner ? 3 : 1,
+      })
+    }
+  }
+}
+
 export default function AllAssetsChart({ assets, range, dark }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const seriesRef = useRef<Record<string, ISeriesApi<'Line'>>>({})
+  const tooltipRef = useRef<HTMLDivElement>(null)
+  const prevHighlightRef = useRef<string | null>(null)
+  const winnerRef = useRef<string | null>(null)
+  const winnerValueRef = useRef<number | null>(null)
+
   const [legend, setLegend] = useState<LegendEntry[]>([])
   const [winnerLabel, setWinnerLabel] = useState<string | null>(null)
+
+  // Keep winnerRef in sync with state (so crosshair closure can read it)
+  useEffect(() => { winnerRef.current = winnerLabel }, [winnerLabel])
 
   // Create / destroy chart when theme changes
   useEffect(() => {
@@ -71,18 +102,70 @@ export default function AllAssetsChart({ assets, range, dark }: Props) {
     chartRef.current = chart
 
     chart.subscribeCrosshairMove((param) => {
-      if (!param.time || !param.seriesData.size) return
+      const tooltip = tooltipRef.current
+      if (!param.time || !param.point || !param.seriesData.size) {
+        // Off chart — restore default styles, hide tooltip
+        if (prevHighlightRef.current !== null) {
+          prevHighlightRef.current = null
+          applyLineStyles(seriesRef.current, null, winnerRef.current)
+        }
+        if (tooltip) tooltip.style.display = 'none'
+        return
+      }
+
+      // Use crosshair Y (same coordinate space as priceToCoordinate)
+      const crosshairY = param.point.y
+      let closestLabel: string | null = null
+      let minDist = Infinity
       const entries: LegendEntry[] = []
+
       for (const [label, series] of Object.entries(seriesRef.current)) {
         const d = param.seriesData.get(series) as { value: number } | undefined
-        if (d !== undefined) {
-          entries.push({ label, color: ASSET_COLORS[label] ?? '#888', value: d.value, winner: false })
+        if (d === undefined) continue
+        const y = series.priceToCoordinate(d.value)
+        if (y !== null) {
+          const dist = Math.abs(y - crosshairY)
+          if (dist < minDist) { minDist = dist; closestLabel = label }
         }
+        entries.push({ label, color: ASSET_COLORS[label] ?? '#888', value: d.value, winner: false })
       }
-      if (!entries.length) return
+
+      // Treat as hovered if within 30px of the nearest line
+      const hovered = minDist < 30 ? closestLabel : null
+
+      // Only call applyOptions when highlight actually changes (perf)
+      if (hovered !== prevHighlightRef.current) {
+        prevHighlightRef.current = hovered
+        applyLineStyles(seriesRef.current, hovered, winnerRef.current)
+      }
+
+      // Update tooltip via direct DOM (avoids re-render on every mouse move)
+      if (tooltip && hovered) {
+        const hoveredEntry = entries.find(e => e.label === hovered)
+        if (hoveredEntry) {
+          const color = ASSET_COLORS[hovered] ?? '#888'
+          const val = hoveredEntry.value
+          const sign = val >= 0 ? '+' : ''
+          const valColor = val >= 0 ? '#22c55e' : '#ef4444'
+          tooltip.style.display = 'flex'
+          // Position: to the right of cursor, at the series Y
+          const seriesY = seriesRef.current[hovered]?.priceToCoordinate(val) ?? param.point.y
+          tooltip.style.left = `${param.point.x + 14}px`
+          tooltip.style.top = `${(seriesY ?? param.point.y) - 16}px`
+          tooltip.innerHTML = `
+            <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+            <span style="font-weight:700;font-size:12px;color:#f0f2ff;">${hovered}</span>
+            <span style="font-family:monospace;font-size:12px;color:${valColor};">${sign}${val.toFixed(2)}%</span>
+          `
+        }
+      } else if (tooltip) {
+        tooltip.style.display = 'none'
+      }
+
+      // Update legend sorted by value
       entries.sort((a, b) => b.value - a.value)
-      const max = entries[0].value
-      entries.forEach(e => { e.winner = e.value === max })
+      const top = hovered ?? winnerRef.current
+      entries.forEach(e => { e.winner = e.label === top })
       setLegend(entries)
     })
 
@@ -154,20 +237,13 @@ export default function AllAssetsChart({ assets, range, dark }: Props) {
     const sorted = Object.entries(endReturns).sort((a, b) => b[1] - a[1])
     const winner = sorted[0]?.[0] ?? null
     setWinnerLabel(winner)
+    winnerRef.current = winner
+    winnerValueRef.current = sorted[0]?.[1] ?? null
+    prevHighlightRef.current = null
 
-    // Apply styling: winner = thick full-color, others = thin faded
-    for (const { label } of assets) {
-      const series = seriesRef.current[label]
-      if (!series) continue
-      const isWinner = label === winner
-      const color = ASSET_COLORS[label] ?? '#888888'
-      series.applyOptions({
-        color: isWinner ? color : color + '55',
-        lineWidth: isWinner ? 3 : 1,
-      })
-    }
+    applyLineStyles(seriesRef.current, null, winner)
 
-    // Build initial legend from end values
+    // Build legend from end values
     const legendEntries: LegendEntry[] = sorted.map(([label, value]) => ({
       label,
       color: ASSET_COLORS[label] ?? '#888',
@@ -176,13 +252,10 @@ export default function AllAssetsChart({ assets, range, dark }: Props) {
     }))
     setLegend(legendEntries)
 
-    // Only set visible range if we have at least one series with data
     if (sorted.length > 0) {
       try {
         chart.timeScale().setVisibleRange({ from: startTs as Time, to: now as Time })
-      } catch {
-        // ignore if chart not ready
-      }
+      } catch { /* ignore */ }
     }
   }, [assets, range, dark])
 
@@ -198,18 +271,34 @@ export default function AllAssetsChart({ assets, range, dark }: Props) {
           >
             {winnerLabel}
           </span>
-          <span
-            className="text-sm font-mono font-semibold"
-            style={{ color: ASSET_COLORS[winnerLabel] }}
-          >
-            {legend.find(e => e.winner) &&
-              ((legend.find(e => e.winner)!.value >= 0 ? '+' : '') + legend.find(e => e.winner)!.value.toFixed(2) + '%')}
+          <span className="text-sm font-mono font-semibold" style={{ color: ASSET_COLORS[winnerLabel] }}>
+            {winnerValueRef.current !== null
+              ? (winnerValueRef.current >= 0 ? '+' : '') + winnerValueRef.current.toFixed(2) + '%'
+              : null}
           </span>
         </div>
       )}
 
-      {/* Chart */}
-      <div ref={containerRef} className="flex-1 min-h-0" />
+      {/* Chart + tooltip overlay */}
+      <div className="relative flex-1 min-h-0">
+        <div ref={containerRef} className="w-full h-full" />
+        <div
+          ref={tooltipRef}
+          style={{
+            display: 'none',
+            position: 'absolute',
+            pointerEvents: 'none',
+            zIndex: 10,
+            alignItems: 'center',
+            gap: '6px',
+            background: 'rgba(10, 14, 26, 0.9)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '6px',
+            padding: '5px 10px',
+            whiteSpace: 'nowrap',
+          }}
+        />
+      </div>
 
       {/* Legend row */}
       {legend.length > 0 && (
@@ -224,13 +313,13 @@ export default function AllAssetsChart({ assets, range, dark }: Props) {
                 className="inline-block rounded-full"
                 style={{ width: e.winner ? 10 : 8, height: e.winner ? 3 : 2, background: e.color, flexShrink: 0 }}
               />
-              <span className={`font-semibold ${e.winner ? '' : 'text-gray-500 dark:text-gray-400'}`} style={e.winner ? { color: e.color } : {}}>
+              <span
+                className={`font-semibold ${e.winner ? '' : 'text-gray-500 dark:text-gray-400'}`}
+                style={e.winner ? { color: e.color } : {}}
+              >
                 {e.label}
               </span>
-              <span
-                className="font-mono"
-                style={{ color: e.value >= 0 ? '#22c55e' : '#ef4444' }}
-              >
+              <span className="font-mono" style={{ color: e.value >= 0 ? '#22c55e' : '#ef4444' }}>
                 {(e.value >= 0 ? '+' : '') + e.value.toFixed(1) + '%'}
               </span>
             </span>
