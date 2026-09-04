@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import './index.css'
 import { useBtcData } from './hooks/useBtcData'
 import { useCryptoOhlcData } from './hooks/useCryptoOhlcData'
+import { useStaticOhlcData } from './hooks/useStaticOhlcData'
 import { useM2Data } from './hooks/useM2Data'
 import { sma, deathCrosses, goldenCrosses } from './lib/indicators'
 import Chart from './components/Chart'
@@ -39,22 +40,30 @@ export default function App() {
   const { data: solData, loading: solLoading, error: solError } = useCryptoOhlcData(cryptoTab === 'SOL' ? 'SOL-USDT' : null)
   const { data: hypeData, loading: hypeLoading, error: hypeError } = useCryptoOhlcData(cryptoTab === 'HYPE' ? 'HYPE-USDT' : null)
   const { data: zecData, loading: zecLoading, error: zecError } = useCryptoOhlcData(cryptoTab === 'ZEC' ? 'ZEC-USDT' : null)
+  const { data: goldData, loading: goldLoading, error: goldError } = useStaticOhlcData(cryptoTab === 'GOLD' ? 'gold.json' : null)
+  const { data: silverData, loading: silverLoading, error: silverError } = useStaticOhlcData(cryptoTab === 'SILVER' ? 'silver.json' : null)
 
   const data = cryptoTab === 'BTC' ? btcData
     : cryptoTab === 'ETH' ? ethData
     : cryptoTab === 'SOL' ? solData
     : cryptoTab === 'HYPE' ? hypeData
-    : zecData
+    : cryptoTab === 'ZEC' ? zecData
+    : cryptoTab === 'GOLD' ? goldData
+    : silverData
   const loading = cryptoTab === 'BTC' ? btcLoading
     : cryptoTab === 'ETH' ? ethLoading
     : cryptoTab === 'SOL' ? solLoading
     : cryptoTab === 'HYPE' ? hypeLoading
-    : zecLoading
+    : cryptoTab === 'ZEC' ? zecLoading
+    : cryptoTab === 'GOLD' ? goldLoading
+    : silverLoading
   const error = cryptoTab === 'BTC' ? btcError
     : cryptoTab === 'ETH' ? ethError
     : cryptoTab === 'SOL' ? solError
     : cryptoTab === 'HYPE' ? hypeError
-    : zecError
+    : cryptoTab === 'ZEC' ? zecError
+    : cryptoTab === 'GOLD' ? goldError
+    : silverError
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -102,7 +111,9 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight">Mike's Crypto Tracker</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{cryptoTab} / USD · Moving Averages</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {cryptoTab === 'GOLD' ? 'Gold' : cryptoTab === 'SILVER' ? 'Silver' : cryptoTab} / USD · Moving Averages
+            </p>
           </div>
         </div>
         <ThemeToggle dark={dark} onToggle={() => setDark((d) => !d)} />

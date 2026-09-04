@@ -1,6 +1,6 @@
-export type CryptoTab = 'BTC' | 'ETH' | 'SOL' | 'HYPE' | 'ZEC'
+export type CryptoTab = 'BTC' | 'ETH' | 'SOL' | 'HYPE' | 'ZEC' | 'GOLD' | 'SILVER'
 
-export const CRYPTO_TABS: CryptoTab[] = ['BTC', 'ETH', 'SOL', 'HYPE', 'ZEC']
+export const CRYPTO_TABS: CryptoTab[] = ['BTC', 'ETH', 'SOL', 'HYPE', 'ZEC', 'GOLD', 'SILVER']
 
 export function isCryptoTab(value: string | null): value is CryptoTab {
   return value !== null && CRYPTO_TABS.includes(value as CryptoTab)
