@@ -51,8 +51,9 @@ export default function App() {
   const { data: solData, loading: solLoading, error: solError } = useCryptoOhlcData(cryptoTab === 'SOL' || cryptoTab === 'ALL' ? 'SOL-USDT' : null, allDelay(1))
   const { data: hypeData, loading: hypeLoading, error: hypeError } = useCryptoOhlcData(cryptoTab === 'HYPE' || cryptoTab === 'ALL' ? 'HYPE-USDT' : null, allDelay(2))
   const { data: zecData, loading: zecLoading, error: zecError } = useCryptoOhlcData(cryptoTab === 'ZEC' || cryptoTab === 'ALL' ? 'ZEC-USDT' : null, allDelay(3))
+  const { data: nearData, loading: nearLoading, error: nearError } = useCryptoOhlcData(cryptoTab === 'NEAR' || cryptoTab === 'ALL' ? 'NEAR-USDT' : null, allDelay(4))
   // PAXG (PAX Gold) = 1 troy oz gold, trades on OKX — same live API as BTC/ETH/SOL
-  const { data: goldData, loading: goldLoading, error: goldError } = useCryptoOhlcData(cryptoTab === 'GOLD' || cryptoTab === 'ALL' ? 'PAXG-USDT' : null, allDelay(4))
+  const { data: goldData, loading: goldLoading, error: goldError } = useCryptoOhlcData(cryptoTab === 'GOLD' || cryptoTab === 'ALL' ? 'PAXG-USDT' : null, allDelay(5))
   const { data: silverData, loading: silverLoading, error: silverError } = useStaticOhlcData(cryptoTab === 'SILVER' || cryptoTab === 'ALL' ? 'silver.json' : null)
 
   const data = cryptoTab === 'BTC' ? btcData
@@ -60,6 +61,7 @@ export default function App() {
     : cryptoTab === 'SOL' ? solData
     : cryptoTab === 'HYPE' ? hypeData
     : cryptoTab === 'ZEC' ? zecData
+    : cryptoTab === 'NEAR' ? nearData
     : cryptoTab === 'GOLD' ? goldData
     : silverData
   const loading = cryptoTab === 'BTC' ? btcLoading
@@ -67,6 +69,7 @@ export default function App() {
     : cryptoTab === 'SOL' ? solLoading
     : cryptoTab === 'HYPE' ? hypeLoading
     : cryptoTab === 'ZEC' ? zecLoading
+    : cryptoTab === 'NEAR' ? nearLoading
     : cryptoTab === 'GOLD' ? goldLoading
     : silverLoading
   const error = cryptoTab === 'BTC' ? btcError
@@ -74,6 +77,7 @@ export default function App() {
     : cryptoTab === 'SOL' ? solError
     : cryptoTab === 'HYPE' ? hypeError
     : cryptoTab === 'ZEC' ? zecError
+    : cryptoTab === 'NEAR' ? nearError
     : cryptoTab === 'GOLD' ? goldError
     : silverError
 
@@ -113,9 +117,10 @@ export default function App() {
     { label: 'SOL', data: solData },
     { label: 'HYPE', data: hypeData },
     { label: 'ZEC', data: zecData },
+    { label: 'NEAR', data: nearData },
     { label: 'GOLD', data: goldData },
     { label: 'SILVER', data: silverData },
-  ], [btcData, ethData, solData, hypeData, zecData, goldData, silverData])
+  ], [btcData, ethData, solData, hypeData, zecData, nearData, goldData, silverData])
 
   // Compute MAs over the FULL dataset for accurate values even when zoomed in
   const ma50 = useMemo(() => sma(data, 50), [data])
@@ -157,7 +162,7 @@ export default function App() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <CryptoTabSelector value={cryptoTab} onChange={selectCryptoTab} />
-            {(cryptoTab === 'ALL' ? (btcLoading || ethLoading || solLoading || hypeLoading || zecLoading || goldLoading || silverLoading) : loading) && (
+            {(cryptoTab === 'ALL' ? (btcLoading || ethLoading || solLoading || hypeLoading || zecLoading || nearLoading || goldLoading || silverLoading) : loading) && (
               <span className="text-xs text-gray-400 dark:text-gray-500">Loading…</span>
             )}
             {cryptoTab !== 'ALL' && error && <span className="text-xs text-red-500">Error: {error}</span>}
