@@ -38,6 +38,60 @@ const VisualTabs = () => (
   </div>
 )
 
+const VisualTickerAndRefresh = () => (
+  <svg viewBox="0 0 400 112" className="w-full rounded-lg overflow-hidden">
+    <rect width="400" height="112" fill="#0f172a" rx="8"/>
+    {/* Daily ticker snapshot */}
+    <rect x="0" y="0" width="400" height="25" fill="#111827"/>
+    <circle cx="14" cy="12.5" r="3" fill="#22c55e"/>
+    <text x="22" y="16" fontSize="8" fill="#cbd5e1" fontWeight="700" fontFamily="Inter, sans-serif">DAILY</text>
+    {[
+      ['BTC', '-0.16%', RED], ['ETH', '+1.08%', GREEN], ['SUI', '+3.76%', GREEN], ['OIL', '-2.93%', RED], ['QQQ', '+2.77%', GREEN],
+    ].map(([label, value, color], index) => (
+      <g key={String(label)} transform={`translate(${70 + index * 66}, 0)`}>
+        <text x="0" y="16" fontSize="7" fill="#e2e8f0" fontWeight="700" fontFamily="Inter, sans-serif">{label}</text>
+        <text x="0" y="23" fontSize="6.5" fill={String(color)} fontFamily="monospace">{value}</text>
+      </g>
+    ))}
+    {/* Header and refresh control snapshot */}
+    <circle cx="16" cy="45" r="10" fill="#f97316"/>
+    <text x="13" y="49" fontSize="10" fill="#fff" fontWeight="700" fontFamily="Inter, sans-serif">₿</text>
+    <text x="32" y="47" fontSize="10" fill="#f8fafc" fontWeight="700" fontFamily="Inter, sans-serif">Mike's Trading Tracker</text>
+    <rect x="284" y="35" width="96" height="21" rx="5" fill="#1f2937" stroke="#334155"/>
+    <path d="M294 47a4 4 0 1 0 1-3" fill="none" stroke="#22c55e" strokeWidth="1.2" strokeLinecap="round"/>
+    <text x="302" y="48.5" fontSize="7" fill="#cbd5e1" fontFamily="Inter, sans-serif">Refresh</text>
+    <text x="346" y="48.5" fontSize="7" fill="#f8fafc" fontWeight="700" fontFamily="Inter, sans-serif">15 min</text>
+    {/* Current tab row snapshot */}
+    <rect x="10" y="71" width="380" height="29" rx="6" fill="#1f2937"/>
+    {['ALL', 'HEATMAP', 'BTC', 'ETH', 'SOL', 'SUI', 'HYPE', 'ZEC'].map((tab, index) => (
+      <g key={tab} transform={`translate(${[17, 59, 128, 170, 212, 254, 296, 344][index]}, 0)`}>
+        <circle cx="4" cy="85" r="2.4" fill={index === 0 ? AMBER : index === 1 ? '#fb7185' : '#60a5fa'}/>
+        <text x="9" y="87.5" fontSize="6.5" fill={index === 2 ? '#60a5fa' : '#cbd5e1'} fontFamily="Inter, sans-serif" fontWeight="700">{tab}</text>
+      </g>
+    ))}
+  </svg>
+)
+
+const VisualHeatmap = () => (
+  <svg viewBox="0 0 400 114" className="w-full rounded-lg overflow-hidden">
+    <rect width="400" height="114" fill="#0f172a" rx="8"/>
+    <text x="12" y="18" fontSize="11" fill="#f8fafc" fontWeight="700" fontFamily="Inter, sans-serif">1Y return heatmap</text>
+    <text x="12" y="29" fontSize="7" fill="#94a3b8" fontFamily="Inter, sans-serif">Selected-period percentage returns</text>
+    {[
+      ['ZEC', '+158.68%', '#4b9d5c'], ['HYPE', '+139.13%', '#468e55'], ['SUI', '+53.44%', '#285c40'],
+      ['OIL', '+48.42%', '#234f39'], ['BTC', '-23.98%', '#5f3037'], ['ETH', '-34.11%', '#71333b'],
+    ].map(([label, value, color], index) => {
+      const x = 12 + (index % 3) * 126
+      const y = 39 + Math.floor(index / 3) * 35
+      return <g key={String(label)}>
+        <rect x={x} y={y} width="116" height="29" rx="5" fill={String(color)} stroke="rgba(255,255,255,.12)"/>
+        <text x={x + 8} y={y + 12} fontSize="7" fill="#e2e8f0" fontWeight="700" fontFamily="Inter, sans-serif">{label}</text>
+        <text x={x + 8} y={y + 23} fontSize="10" fill="#fff" fontWeight="700" fontFamily="Inter, sans-serif">{value}</text>
+      </g>
+    })}
+  </svg>
+)
+
 const VisualAllChart = () => (
   <svg viewBox="0 0 400 90" className="w-full rounded-lg overflow-hidden">
     <rect width="400" height="90" fill="#0f172a" rx="8"/>
@@ -200,13 +254,22 @@ const steps: Step[] = [
     visual: <VisualTabs />,
   },
   {
+    title: 'Ticker tape & refresh controls',
+    body: [
+      'The daily ticker tape sits above the dashboard title and shows the latest one-day percentage return for every tracked asset. Green indicates a gain; red indicates a loss. It scrolls continuously and pauses when you hover it.',
+      'The Refresh control is in the header. Choose Off, 5 minutes, 15 minutes, 30 minutes, or 1 hour. A 15-minute interval is the default for new visitors and your choice is remembered on this device.',
+    ],
+    tip: 'Commodity and equity figures use the latest available daily close, while crypto updates from the OKX market feed. The tape may briefly show a dash while data is loading.',
+    visual: <VisualTickerAndRefresh />,
+  },
+  {
     title: 'Start with the ALL tab',
     body: [
       'The ALL tab is the best starting point. It shows every asset on one chart, each normalized to % return from the start of the selected range. This instantly answers: "Which asset has actually made me money this year?"',
       'The top performer is highlighted with a thick, bright line. All others are faded so the winner is immediately obvious no matter how cluttered the chart gets.',
     ],
-    tip: 'Change the range (1M · 3M · 6M · 1Y · 2Y · 5Y · ALL) to compare different horizons. The highlighted leader updates as the range changes.',
-    visual: <VisualAllChart />,
+    tip: 'Change the range (1M · 3M · 6M · 1Y · 2Y · 5Y) to compare different horizons. The highlighted leader updates as the range changes.',
+    visual: <VisualHeatmap />,
   },
   {
     title: 'Scan returns in HEATMAP',
@@ -278,6 +341,8 @@ const steps: Step[] = [
       <div className="flex flex-col gap-2">
         {[
           ['Start in ALL view', 'Compare normalized returns over the timeframe you care about.'],
+          ['Scan HEATMAP', 'Rank every asset by selected-period return before drilling into a chart.'],
+          ['Check the ticker', 'See the latest daily move across every tracked asset at a glance.'],
           ['Open a single asset', 'Inspect daily candles, moving averages, price/MA crossings, and range extremes.'],
           ['Check the performance row', 'Compare short-term returns with YTD, 1-year, and 2-year changes.'],
           ['Use M2 as context', 'Read the macro liquidity series without mixing its scale with the asset price.'],

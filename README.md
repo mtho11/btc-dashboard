@@ -21,7 +21,7 @@ A responsive market dashboard for comparing crypto, commodities, and U.S. equiti
 
 ## Dashboard guide
 
-Open **Guide** in the top-right of the dashboard for the current visual walkthrough. It covers asset selection, the ALL comparison chart, candlesticks and moving averages, cross markers, M2, period high/low levels, and return metrics.
+Open **Guide** in the top-right of the dashboard for the current visual walkthrough. Its current visual previews cover the top ticker and refresh control, asset tabs, ALL comparison, HEATMAP, candlesticks and moving averages, cross markers, M2, period high/low levels, and return metrics.
 
 ### Asset and range links
 
@@ -33,7 +33,7 @@ https://mtho11.github.io/btc-dashboard/?asset=ETH&range=1Y
 
 Supported assets: `ALL`, `HEATMAP`, `BTC`, `ETH`, `SOL`, `SUI`, `HYPE`, `ZEC`, `NEAR`, `GOLD`, `SILVER`, `OIL`, `SPY`, and `QQQ`.
 
-Supported ranges: `1M`, `3M`, `6M`, `1Y`, `2Y`, `5Y`, and `ALL`.
+Supported ranges: `1M`, `3M`, `6M`, `1Y`, `2Y`, and `5Y`.
 
 ## Data and refresh behavior
 
