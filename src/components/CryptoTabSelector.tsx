@@ -1,6 +1,6 @@
-export type CryptoTab = 'ALL' | 'BTC' | 'ETH' | 'SOL' | 'HYPE' | 'ZEC' | 'NEAR' | 'GOLD' | 'SILVER'
+export type CryptoTab = 'ALL' | 'BTC' | 'ETH' | 'SOL' | 'HYPE' | 'ZEC' | 'NEAR' | 'GOLD' | 'SILVER' | 'OIL'
 
-export const CRYPTO_TABS: CryptoTab[] = ['ALL', 'BTC', 'ETH', 'SOL', 'HYPE', 'ZEC', 'NEAR', 'GOLD', 'SILVER']
+export const CRYPTO_TABS: CryptoTab[] = ['ALL', 'BTC', 'ETH', 'SOL', 'HYPE', 'ZEC', 'NEAR', 'GOLD', 'SILVER', 'OIL']
 
 export function isCryptoTab(value: string | null): value is CryptoTab {
   return value !== null && CRYPTO_TABS.includes(value as CryptoTab)
@@ -25,7 +25,7 @@ export default function CryptoTabSelector({ value, onChange }: CryptoTabSelector
         ALL
       </button>
       <div className="w-px bg-gray-300 dark:bg-gray-600 my-1" />
-      {(['BTC', 'ETH', 'SOL', 'HYPE', 'ZEC', 'NEAR', 'GOLD', 'SILVER'] as const).map((tab) => (
+      {(['BTC', 'ETH', 'SOL', 'HYPE', 'ZEC', 'NEAR', 'GOLD', 'SILVER', 'OIL'] as const).map((tab) => (
         <button
           key={tab}
           onClick={() => onChange(tab)}

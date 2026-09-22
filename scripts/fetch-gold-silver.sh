@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run from project root to refresh public/gold.json and public/silver.json
+# Run from project root to refresh precious-metals and WTI crude-oil data.
 python3 -c "
 import urllib.request, json
 
@@ -23,4 +23,5 @@ def fetch(symbol, out):
 
 fetch('GC=F', 'public/gold.json')
 fetch('SI=F', 'public/silver.json')
+fetch('CL=F', 'public/oil.json')
 "

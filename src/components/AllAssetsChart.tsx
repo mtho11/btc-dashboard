@@ -9,8 +9,10 @@ export const ASSET_COLORS: Record<string, string> = {
   SOL: '#a855f7',
   HYPE: '#10b981',
   ZEC: '#eab308',
+  NEAR: '#14b8a6',
   GOLD: '#fbbf24',
   SILVER: '#94a3b8',
+  OIL: '#fb7185',
 }
 
 const RANGE_SECONDS: Record<Range, number> = {
