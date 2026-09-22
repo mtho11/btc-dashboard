@@ -9,7 +9,7 @@ import Chart from './components/Chart'
 import AllAssetsChart from './components/AllAssetsChart'
 import ReturnsHeatmap from './components/ReturnsHeatmap'
 import RangeSelector, { isRange, type Range } from './components/RangeSelector'
-import CryptoTabSelector, { isCryptoTab, type CryptoTab } from './components/CryptoTabSelector'
+import CryptoTabSelector, { isCryptoTab, type CryptoTab, CRYPTO_TABS, type CustomTabDef } from './components/CryptoTabSelector'
 import PerformanceSection from './components/PerformanceSection'
 import ThemeToggle from './components/ThemeToggle'
 import Guide from './components/Guide'
@@ -34,9 +34,14 @@ export default function App() {
     const timeframe = new URLSearchParams(window.location.search).get('range')
     return isRange(timeframe) ? timeframe : '1Y'
   })
-  const [cryptoTab, setCryptoTab] = useState<CryptoTab>(() => {
+  const [cryptoTab, setCryptoTab] = useState<string>(() => {
     const asset = new URLSearchParams(window.location.search).get('asset')
-    return isCryptoTab(asset) ? asset : 'BTC'
+    if (isCryptoTab(asset)) return asset
+    try {
+      const custom = JSON.parse(localStorage.getItem('mtt_custom_tabs') || '[]') as CustomTabDef[]
+      if (asset && custom.some(t => t.symbol === asset)) return asset
+    } catch {}
+    return 'BTC'
   })
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(() => {
     try {
@@ -54,6 +59,21 @@ export default function App() {
   const closeGuide = () => {
     try { localStorage.setItem('mtt_guide_seen', '1') } catch {}
     setShowGuide(false)
+  }
+
+  const [customTabs, setCustomTabs] = useState<CustomTabDef[]>(() => {
+    try { return JSON.parse(localStorage.getItem('mtt_custom_tabs') || '[]') } catch { return [] }
+  })
+  const addCustomTab = (tab: CustomTabDef) => {
+    const next = [...customTabs, tab]
+    setCustomTabs(next)
+    try { localStorage.setItem('mtt_custom_tabs', JSON.stringify(next)) } catch {}
+  }
+  const removeCustomTab = (symbol: string) => {
+    const next = customTabs.filter(t => t.symbol !== symbol)
+    setCustomTabs(next)
+    try { localStorage.setItem('mtt_custom_tabs', JSON.stringify(next)) } catch {}
+    if (cryptoTab === symbol) setCryptoTab('BTC')
   }
 
   useEffect(() => {
@@ -82,6 +102,10 @@ export default function App() {
   const { data: spyData, loading: spyLoading, error: spyError } = useStaticOhlcData(cryptoTab === 'SPY' || loadAllAssetData ? 'spy.json' : null, refreshKey)
   const { data: qqqData, loading: qqqLoading, error: qqqError } = useStaticOhlcData(cryptoTab === 'QQQ' || loadAllAssetData ? 'qqq.json' : null, refreshKey)
 
+  const isCustomTab = !CRYPTO_TABS.includes(cryptoTab as CryptoTab)
+  const customInstId = isCustomTab ? (customTabs.find(t => t.symbol === cryptoTab)?.instId ?? null) : null
+  const { data: customData, loading: customLoading, error: customError } = useCryptoOhlcData(customInstId)
+
   const data = cryptoTab === 'BTC' ? btcData
     : cryptoTab === 'ETH' ? ethData
     : cryptoTab === 'SOL' ? solData
@@ -93,7 +117,8 @@ export default function App() {
     : cryptoTab === 'SILVER' ? silverData
     : cryptoTab === 'OIL' ? oilData
     : cryptoTab === 'SPY' ? spyData
-    : qqqData
+    : cryptoTab === 'QQQ' ? qqqData
+    : customData
   const loading = cryptoTab === 'BTC' ? btcLoading
     : cryptoTab === 'ETH' ? ethLoading
     : cryptoTab === 'SOL' ? solLoading
@@ -105,7 +130,8 @@ export default function App() {
     : cryptoTab === 'SILVER' ? silverLoading
     : cryptoTab === 'OIL' ? oilLoading
     : cryptoTab === 'SPY' ? spyLoading
-    : qqqLoading
+    : cryptoTab === 'QQQ' ? qqqLoading
+    : customLoading
   const error = cryptoTab === 'BTC' ? btcError
     : cryptoTab === 'ETH' ? ethError
     : cryptoTab === 'SOL' ? solError
@@ -117,7 +143,8 @@ export default function App() {
     : cryptoTab === 'SILVER' ? silverError
     : cryptoTab === 'OIL' ? oilError
     : cryptoTab === 'SPY' ? spyError
-    : qqqError
+    : cryptoTab === 'QQQ' ? qqqError
+    : customError
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -129,13 +156,14 @@ export default function App() {
       const asset = params.get('asset')
       const timeframe = params.get('range')
       if (isCryptoTab(asset)) setCryptoTab(asset)
+      else if (asset && customTabs.some(t => t.symbol === asset)) setCryptoTab(asset)
       if (isRange(timeframe)) setRange(timeframe)
     }
     window.addEventListener('popstate', syncFromUrl)
     return () => window.removeEventListener('popstate', syncFromUrl)
   }, [])
 
-  const selectCryptoTab = (tab: CryptoTab) => {
+  const selectCryptoTab = (tab: string) => {
     const url = new URL(window.location.href)
     url.searchParams.set('asset', tab)
     window.history.pushState({}, '', url)
@@ -201,7 +229,13 @@ export default function App() {
       <main className="p-6 flex flex-col gap-4" style={{ height: 'calc(100vh - 109px)' }}>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <CryptoTabSelector value={cryptoTab} onChange={selectCryptoTab} />
+            <CryptoTabSelector
+              value={cryptoTab}
+              onChange={selectCryptoTab}
+              customTabs={customTabs}
+              onAddCustom={addCustomTab}
+              onRemoveCustom={removeCustomTab}
+            />
             {comparisonTab ? (btcLoading || ethLoading || solLoading || suiLoading || hypeLoading || zecLoading || nearLoading || goldLoading || silverLoading || oilLoading || spyLoading || qqqLoading) && (
               <span className="text-xs text-gray-400 dark:text-gray-500">Loading…</span>
             ) : loading && <span className="text-xs text-gray-400 dark:text-gray-500">Loading…</span>}

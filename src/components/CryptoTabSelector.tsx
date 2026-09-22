@@ -1,14 +1,24 @@
+import { useState, useRef, useEffect } from 'react'
+
 export type CryptoTab = 'ALL' | 'HEATMAP' | 'BTC' | 'ETH' | 'SOL' | 'SUI' | 'HYPE' | 'ZEC' | 'NEAR' | 'GOLD' | 'SILVER' | 'OIL' | 'SPY' | 'QQQ'
+
+export interface CustomTabDef {
+  symbol: string
+  instId: string
+}
 
 export const CRYPTO_TABS: CryptoTab[] = ['ALL', 'HEATMAP', 'BTC', 'ETH', 'SOL', 'SUI', 'HYPE', 'ZEC', 'NEAR', 'GOLD', 'SILVER', 'OIL', 'SPY', 'QQQ']
 
 export function isCryptoTab(value: string | null): value is CryptoTab {
-  return value !== null && CRYPTO_TABS.includes(value as CryptoTab)
+  return value !== null && (CRYPTO_TABS as string[]).includes(value)
 }
 
 interface CryptoTabSelectorProps {
-  value: CryptoTab
-  onChange: (tab: CryptoTab) => void
+  value: string
+  onChange: (tab: string) => void
+  customTabs?: CustomTabDef[]
+  onAddCustom?: (tab: CustomTabDef) => void
+  onRemoveCustom?: (symbol: string) => void
 }
 
 function TabIcon({ tab }: { tab: CryptoTab }) {
@@ -46,7 +56,7 @@ function TabIcon({ tab }: { tab: CryptoTab }) {
   }
 }
 
-function TabButton({ tab, selected, onChange, emphasis = 'asset' }: { tab: CryptoTab; selected: boolean; onChange: (tab: CryptoTab) => void; emphasis?: 'asset' | 'all' | 'heatmap' }) {
+function TabButton({ tab, selected, onChange, emphasis = 'asset' }: { tab: CryptoTab; selected: boolean; onChange: (tab: string) => void; emphasis?: 'asset' | 'all' | 'heatmap' }) {
   const activeColor = emphasis === 'all'
     ? 'text-amber-500 dark:text-amber-400'
     : emphasis === 'heatmap'
@@ -68,15 +78,127 @@ function TabButton({ tab, selected, onChange, emphasis = 'asset' }: { tab: Crypt
   )
 }
 
-export default function CryptoTabSelector({ value, onChange }: CryptoTabSelectorProps) {
+function CustomTabButton({ tab, selected, onChange, onRemove }: {
+  tab: CustomTabDef
+  selected: boolean
+  onChange: (s: string) => void
+  onRemove: (s: string) => void
+}) {
   return (
-    <div className="flex gap-1 bg-gray-100 dark:bg-gray-800/60 p-1 rounded-lg">
+    <div className="group relative inline-flex items-center">
+      <button
+        onClick={() => onChange(tab.symbol)}
+        className={`inline-flex items-center gap-1.5 pl-3 pr-7 py-1.5 rounded-md text-sm font-semibold transition-all duration-150 ${
+          selected
+            ? 'bg-white dark:bg-gray-700 text-violet-600 dark:text-violet-400 shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+        }`}
+      >
+        <span className="w-3.5 h-3.5 shrink-0 rounded-full bg-violet-400 dark:bg-violet-500 flex items-center justify-center text-[8px] text-white font-bold leading-none">
+          {tab.symbol.charAt(0)}
+        </span>
+        {tab.symbol}
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); onRemove(tab.symbol) }}
+        aria-label={`Remove ${tab.symbol}`}
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
+export default function CryptoTabSelector({ value, onChange, customTabs = [], onAddCustom, onRemoveCustom }: CryptoTabSelectorProps) {
+  const [adding, setAdding] = useState(false)
+  const [inputVal, setInputVal] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (adding) inputRef.current?.focus()
+  }, [adding])
+
+  const handleAdd = () => {
+    const raw = inputVal.trim().toUpperCase()
+    if (!raw) { setAdding(false); return }
+
+    let symbol: string
+    let instId: string
+
+    if (raw.includes('-')) {
+      symbol = raw.split('-')[0]
+      instId = raw
+    } else {
+      symbol = raw
+      instId = `${raw}-USDT`
+    }
+
+    if ((CRYPTO_TABS as string[]).includes(symbol)) return
+    if (customTabs.some(t => t.symbol === symbol)) return
+
+    onAddCustom?.({ symbol, instId })
+    onChange(symbol)
+    setInputVal('')
+    setAdding(false)
+  }
+
+  const handleCancel = () => {
+    setAdding(false)
+    setInputVal('')
+  }
+
+  return (
+    <div className="flex gap-1 bg-gray-100 dark:bg-gray-800/60 p-1 rounded-lg flex-wrap">
       <TabButton tab="ALL" selected={value === 'ALL'} onChange={onChange} emphasis="all" />
       <TabButton tab="HEATMAP" selected={value === 'HEATMAP'} onChange={onChange} emphasis="heatmap" />
       <div className="w-px bg-gray-300 dark:bg-gray-600 my-1" />
       {(['BTC', 'ETH', 'SOL', 'SUI', 'HYPE', 'ZEC', 'NEAR', 'GOLD', 'SILVER', 'OIL', 'SPY', 'QQQ'] as const).map((tab) => (
         <TabButton key={tab} tab={tab} selected={value === tab} onChange={onChange} />
       ))}
+      {customTabs.length > 0 && <div className="w-px bg-gray-300 dark:bg-gray-600 my-1" />}
+      {customTabs.map((tab) => (
+        <CustomTabButton
+          key={tab.symbol}
+          tab={tab}
+          selected={value === tab.symbol}
+          onChange={onChange}
+          onRemove={onRemoveCustom ?? (() => {})}
+        />
+      ))}
+      {adding ? (
+        <div className="inline-flex items-center gap-1 px-1">
+          <input
+            ref={inputRef}
+            value={inputVal}
+            onChange={(e) => setInputVal(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAdd()
+              if (e.key === 'Escape') handleCancel()
+            }}
+            placeholder="DOGE or DOGE-USDT"
+            className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 w-32 outline-none focus:border-violet-400 dark:focus:border-violet-500"
+          />
+          <button
+            onClick={handleAdd}
+            className="text-xs font-bold text-violet-500 hover:text-violet-700 dark:hover:text-violet-300 px-1 py-1 transition-colors"
+            title="Add"
+          >✓</button>
+          <button
+            onClick={handleCancel}
+            className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-1 py-1 transition-colors"
+            title="Cancel"
+          >✕</button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setAdding(true)}
+          title="Add custom symbol"
+          className="px-2 py-1 rounded-md text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        >
+          +
+        </button>
+      )}
     </div>
   )
 }
