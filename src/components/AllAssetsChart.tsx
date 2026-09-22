@@ -13,6 +13,8 @@ export const ASSET_COLORS: Record<string, string> = {
   GOLD: '#fbbf24',
   SILVER: '#94a3b8',
   OIL: '#fb7185',
+  SPY: '#38bdf8',
+  QQQ: '#c084fc',
 }
 
 const RANGE_SECONDS: Record<Range, number> = {

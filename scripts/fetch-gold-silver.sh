@@ -24,4 +24,6 @@ def fetch(symbol, out):
 fetch('GC=F', 'public/gold.json')
 fetch('SI=F', 'public/silver.json')
 fetch('CL=F', 'public/oil.json')
+fetch('SPY', 'public/spy.json')
+fetch('QQQ', 'public/qqq.json')
 "

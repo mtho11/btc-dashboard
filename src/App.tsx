@@ -56,6 +56,8 @@ export default function App() {
   const { data: goldData, loading: goldLoading, error: goldError } = useCryptoOhlcData(cryptoTab === 'GOLD' || cryptoTab === 'ALL' ? 'PAXG-USDT' : null, allDelay(5))
   const { data: silverData, loading: silverLoading, error: silverError } = useStaticOhlcData(cryptoTab === 'SILVER' || cryptoTab === 'ALL' ? 'silver.json' : null)
   const { data: oilData, loading: oilLoading, error: oilError } = useStaticOhlcData(cryptoTab === 'OIL' || cryptoTab === 'ALL' ? 'oil.json' : null)
+  const { data: spyData, loading: spyLoading, error: spyError } = useStaticOhlcData(cryptoTab === 'SPY' || cryptoTab === 'ALL' ? 'spy.json' : null)
+  const { data: qqqData, loading: qqqLoading, error: qqqError } = useStaticOhlcData(cryptoTab === 'QQQ' || cryptoTab === 'ALL' ? 'qqq.json' : null)
 
   const data = cryptoTab === 'BTC' ? btcData
     : cryptoTab === 'ETH' ? ethData
@@ -65,7 +67,9 @@ export default function App() {
     : cryptoTab === 'NEAR' ? nearData
     : cryptoTab === 'GOLD' ? goldData
     : cryptoTab === 'SILVER' ? silverData
-    : oilData
+    : cryptoTab === 'OIL' ? oilData
+    : cryptoTab === 'SPY' ? spyData
+    : qqqData
   const loading = cryptoTab === 'BTC' ? btcLoading
     : cryptoTab === 'ETH' ? ethLoading
     : cryptoTab === 'SOL' ? solLoading
@@ -74,7 +78,9 @@ export default function App() {
     : cryptoTab === 'NEAR' ? nearLoading
     : cryptoTab === 'GOLD' ? goldLoading
     : cryptoTab === 'SILVER' ? silverLoading
-    : oilLoading
+    : cryptoTab === 'OIL' ? oilLoading
+    : cryptoTab === 'SPY' ? spyLoading
+    : qqqLoading
   const error = cryptoTab === 'BTC' ? btcError
     : cryptoTab === 'ETH' ? ethError
     : cryptoTab === 'SOL' ? solError
@@ -83,7 +89,9 @@ export default function App() {
     : cryptoTab === 'NEAR' ? nearError
     : cryptoTab === 'GOLD' ? goldError
     : cryptoTab === 'SILVER' ? silverError
-    : oilError
+    : cryptoTab === 'OIL' ? oilError
+    : cryptoTab === 'SPY' ? spyError
+    : qqqError
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -125,7 +133,9 @@ export default function App() {
     { label: 'GOLD', data: goldData },
     { label: 'SILVER', data: silverData },
     { label: 'OIL', data: oilData },
-  ], [btcData, ethData, solData, hypeData, zecData, nearData, goldData, silverData, oilData])
+    { label: 'SPY', data: spyData },
+    { label: 'QQQ', data: qqqData },
+  ], [btcData, ethData, solData, hypeData, zecData, nearData, goldData, silverData, oilData, spyData, qqqData])
 
   // Compute MAs over the FULL dataset for accurate values even when zoomed in
   const ma50 = useMemo(() => sma(data, 50), [data])
@@ -162,7 +172,7 @@ export default function App() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <CryptoTabSelector value={cryptoTab} onChange={selectCryptoTab} />
-            {(cryptoTab === 'ALL' ? (btcLoading || ethLoading || solLoading || hypeLoading || zecLoading || nearLoading || goldLoading || silverLoading || oilLoading) : loading) && (
+            {(cryptoTab === 'ALL' ? (btcLoading || ethLoading || solLoading || hypeLoading || zecLoading || nearLoading || goldLoading || silverLoading || oilLoading || spyLoading || qqqLoading) : loading) && (
               <span className="text-xs text-gray-400 dark:text-gray-500">Loading…</span>
             )}
             {cryptoTab !== 'ALL' && error && <span className="text-xs text-red-500">Error: {error}</span>}
