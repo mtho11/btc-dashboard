@@ -30,7 +30,7 @@ export default function TickerTape({ assets }: Props) {
   const entries = assets.map(({ label, data }) => ({ label, value: dailyReturn(data) }))
 
   return (
-    <section aria-label="Daily market return ticker" className="overflow-hidden border-t border-gray-200 bg-gray-50/80 dark:border-gray-800 dark:bg-gray-900/70">
+    <section aria-label="Daily market return ticker" className="overflow-hidden border-b border-gray-200 bg-gray-50/80 dark:border-gray-800 dark:bg-gray-900/70">
       <div className="flex items-stretch">
         <div className="z-10 flex shrink-0 items-center gap-1.5 border-r border-gray-200 bg-gray-100 px-4 text-xs font-bold uppercase tracking-wider text-gray-500 shadow-[8px_0_12px_rgba(0,0,0,0.04)] dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:shadow-[8px_0_12px_rgba(0,0,0,0.18)]">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />

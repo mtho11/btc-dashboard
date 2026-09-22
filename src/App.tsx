@@ -175,6 +175,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+      <TickerTape assets={allAssets} />
+
       <header className="border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
@@ -195,8 +197,6 @@ export default function App() {
           <ThemeToggle dark={dark} onToggle={() => setDark((d) => !d)} />
         </div>
       </header>
-
-      <TickerTape assets={allAssets} />
 
       <main className="p-6 flex flex-col gap-4" style={{ height: 'calc(100vh - 109px)' }}>
         <div className="flex items-center justify-between flex-wrap gap-3">
