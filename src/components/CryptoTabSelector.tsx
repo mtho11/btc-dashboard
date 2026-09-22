@@ -1,6 +1,6 @@
-export type CryptoTab = 'ALL' | 'BTC' | 'ETH' | 'SOL' | 'HYPE' | 'ZEC' | 'NEAR' | 'GOLD' | 'SILVER' | 'OIL' | 'SPY' | 'QQQ'
+export type CryptoTab = 'ALL' | 'HEATMAP' | 'BTC' | 'ETH' | 'SOL' | 'HYPE' | 'ZEC' | 'NEAR' | 'GOLD' | 'SILVER' | 'OIL' | 'SPY' | 'QQQ'
 
-export const CRYPTO_TABS: CryptoTab[] = ['ALL', 'BTC', 'ETH', 'SOL', 'HYPE', 'ZEC', 'NEAR', 'GOLD', 'SILVER', 'OIL', 'SPY', 'QQQ']
+export const CRYPTO_TABS: CryptoTab[] = ['ALL', 'HEATMAP', 'BTC', 'ETH', 'SOL', 'HYPE', 'ZEC', 'NEAR', 'GOLD', 'SILVER', 'OIL', 'SPY', 'QQQ']
 
 export function isCryptoTab(value: string | null): value is CryptoTab {
   return value !== null && CRYPTO_TABS.includes(value as CryptoTab)
@@ -23,6 +23,16 @@ export default function CryptoTabSelector({ value, onChange }: CryptoTabSelector
         }`}
       >
         ALL
+      </button>
+      <button
+        onClick={() => onChange('HEATMAP')}
+        className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-150 ${
+          value === 'HEATMAP'
+            ? 'bg-white dark:bg-gray-700 text-rose-600 dark:text-rose-400 shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+        }`}
+      >
+        HEATMAP
       </button>
       <div className="w-px bg-gray-300 dark:bg-gray-600 my-1" />
       {(['BTC', 'ETH', 'SOL', 'HYPE', 'ZEC', 'NEAR', 'GOLD', 'SILVER', 'OIL', 'SPY', 'QQQ'] as const).map((tab) => (

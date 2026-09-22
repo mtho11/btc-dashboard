@@ -13,13 +13,18 @@ const VisualTabs = () => (
   <div className="flex flex-wrap gap-2 justify-center py-2">
     {[
       ['ALL', '#f59e0b'],
+      ['HEATMAP', '#fb7185'],
       ['BTC', '#f97316'],
       ['ETH', '#818cf8'],
       ['SOL', '#a855f7'],
       ['HYPE', '#10b981'],
       ['ZEC', '#eab308'],
+      ['NEAR', '#38bdf8'],
       ['GOLD', '#fbbf24'],
       ['SILVER', '#94a3b8'],
+      ['OIL', '#fb7185'],
+      ['SPY', '#38bdf8'],
+      ['QQQ', '#c084fc'],
     ].map(([label, color]) => (
       <span
         key={label}
@@ -187,10 +192,10 @@ const steps: Step[] = [
   {
     title: 'Welcome to Mike\'s Trading Tracker',
     body: [
-      'This dashboard tracks 7 assets — Bitcoin, Ethereum, Solana, Hyperliquid, Zcash, Gold, and Silver — all in one place. You can compare their performance, spot trend changes, and see how global money supply relates to price moves.',
-      'No account needed. Crypto prices update live from OKX\'s public API. Silver and the US M2 money supply refresh automatically every night.',
+      'Track Bitcoin, Ethereum, Solana, Hyperliquid, Zcash, NEAR, Gold, Silver, Oil, SPY, and QQQ from one dashboard. Use ALL for a normalized comparison, HEATMAP for ranked period returns, or open a single asset for a detailed candlestick view.',
+      'No account is needed. Crypto data is sourced from OKX; M2 comes from FRED; commodity and equity snapshots are refreshed daily from Yahoo Finance.',
     ],
-    tip: 'All 7 tabs are accessible at any time from the top bar. The selected asset and range are saved in the URL, so you can bookmark any view.',
+    tip: 'The selected asset and range are preserved in the URL. For example, bookmark ?asset=ETH&range=1Y to return to the same view.',
     visual: <VisualTabs />,
   },
   {
@@ -199,7 +204,16 @@ const steps: Step[] = [
       'The ALL tab is the best starting point. It shows every asset on one chart, each normalized to % return from the start of the selected range. This instantly answers: "Which asset has actually made me money this year?"',
       'The top performer is highlighted with a thick, bright line. All others are faded so the winner is immediately obvious no matter how cluttered the chart gets.',
     ],
-    tip: 'Change the range (1M · 3M · 6M · 1Y · 2Y · 5Y) to compare over different horizons. Gold might win over 5Y while HYPE leads over 1Y — the winner badge updates instantly.',
+    tip: 'Change the range (1M · 3M · 6M · 1Y · 2Y · 5Y · ALL) to compare different horizons. The highlighted leader updates as the range changes.',
+    visual: <VisualAllChart />,
+  },
+  {
+    title: 'Scan returns in HEATMAP',
+    body: [
+      'The HEATMAP tab sits beside ALL and ranks every tracked asset by percentage return over the selected timeframe. Green cells are positive, red cells are negative, and stronger color intensity indicates a larger move.',
+      'Each card uses the asset\'s latest available close and the first close in the selected period, so markets with different trading calendars can still be compared quickly.',
+    ],
+    tip: 'Use HEATMAP when you want a fast ranking; switch to ALL when you want to see how those returns developed over time.',
     visual: <VisualAllChart />,
   },
   {
@@ -208,7 +222,7 @@ const steps: Step[] = [
       'In the ALL view, move your cursor over any line to focus on it. The hovered line turns bright and thick while everything else fades. A tooltip appears showing the asset\'s exact % return at that date.',
       'Scrub left and right to sweep through time — watch rankings shift. You might see HYPE was deep in the red before a sudden surge, or Gold quietly outperforming all year.',
     ],
-    tip: 'Look for lines that are rising steeply while others are flat or falling. A line catching up fast may signal accelerating momentum — especially meaningful if it just had a golden cross.',
+    tip: 'Use the cursor to compare the same point in time across assets. The comparison chart shows normalized returns, not price levels.',
     visual: <VisualHover />,
   },
   {
@@ -217,25 +231,25 @@ const steps: Step[] = [
       'Click any tab to see its candlestick chart. Each candle is one day: green = price went up, red = price went down. The wick shows the high and low; the body shows open and close.',
       'Three moving average lines are overlaid to show trend direction. The 50-day MA (amber) reacts quickly to price changes. The 200-day MA (blue) is slower and more reliable for long-term trend. The 200-week MA (purple) is the multi-year baseline.',
     ],
-    tip: 'When price is above all three MAs, the asset is in a confirmed uptrend. Below all three = downtrend. The 200D MA is often the line traders watch most for BTC.',
+    tip: 'Moving averages are trend indicators, not predictions. The price scale is on the right; the M2 overlay, when available, uses the left scale.',
     visual: <VisualMAs />,
   },
   {
     title: 'Death & Golden Crosses',
     body: [
-      'The chart automatically marks where the 50-day MA crosses the 200-day MA. A golden cross (▲) happens when the 50D crosses above the 200D — historically a long-term bullish signal. A death cross (▼) is the opposite.',
-      'Switch to the 5Y range on BTC to see all historical crosses. You\'ll notice golden crosses often appear near the start of bull runs, and death crosses near market tops.',
+      'The chart marks intersections between the 50-day and 200-day averages. A green up arrow marks a golden cross (50D moves above 200D); a red down arrow marks a death cross (50D moves below 200D). Each marker has a matching dashed guide to the date axis.',
+      'Small green and red dots mark where price crosses the 50-day average. Use longer ranges to see more historical signals.',
     ],
-    tip: 'Crosses are lagging signals — they confirm a trend that already started, not predict one. Use them to validate a position, not time an exact entry. Combine with M2 expansion for conviction.',
+    tip: 'Crosses are lagging signals: they describe a change already underway and should be considered alongside price action and your own risk process.',
     visual: <VisualCrosses />,
   },
   {
     title: 'M2 money supply overlay',
     body: [
-      'The pink dashed line (left axis) shows US M2 money supply in billions — a measure of total dollar liquidity. When the Fed expands M2, more money flows into risk assets. Research shows BTC often rallies 3–6 months after M2 starts accelerating.',
-      'The M2 line uses its own left axis so it doesn\'t interfere with the asset price on the right. Think of it as the macro tide — when the tide comes in, most boats rise.',
+      'The pink dashed line shows US M2 money supply, a measure of broad dollar liquidity. It uses the left axis so it doesn\'t distort the asset price on the right axis.',
+      'M2 is a macro context series, not a trading signal. Its timing and relationship to individual assets can vary.',
     ],
-    tip: 'Watch for divergences: M2 rising while crypto is flat or falling = potential catch-up rally ahead. M2 falling while crypto is at highs = macro headwind. A golden cross + rising M2 is historically very bullish.',
+    tip: 'Use the legend and crosshair to read the M2 level at a particular date alongside the selected asset.',
     visual: <VisualM2 />,
   },
   {
@@ -257,18 +271,17 @@ const steps: Step[] = [
     visual: <VisualStats />,
   },
   {
-    title: 'Tricks to use it to your advantage',
-    body: ['Put these patterns together to build a complete picture before acting:'],
+    title: 'A practical workflow',
+    body: ['Use the dashboard to organize information before making your own decision:'],
     visual: (
       <div className="flex flex-col gap-2">
         {[
-          ['Start in ALL view', 'Get the macro picture first — who\'s winning this timeframe?'],
-          ['Use 2Y range in ALL', 'See a full bull/bear cycle to understand where you are in the market structure.'],
-          ['Watch the 200W MA', 'BTC has historically bottomed near the purple 200W MA. It\'s the "bear market floor."'],
-          ['M2 + golden cross = conviction', 'When M2 is expanding AND a golden cross fires, that combination has historically preceded major bull runs.'],
-          ['Gold vs crypto divergence', 'If Gold is rising but BTC is flat, risk appetite may be low — money is in "safe haven" mode.'],
-          ['Check %YTD vs %1Y', 'Spot whether momentum is accelerating or fading relative to last year\'s performance.'],
-          ['Bookmark views', 'The URL updates with your asset and range — bookmark BTC/5Y or HYPE/1Y to jump back instantly.'],
+          ['Start in ALL view', 'Compare normalized returns over the timeframe you care about.'],
+          ['Open a single asset', 'Inspect daily candles, moving averages, price/MA crossings, and range extremes.'],
+          ['Check the performance row', 'Compare short-term returns with YTD, 1-year, and 2-year changes.'],
+          ['Use M2 as context', 'Read the macro liquidity series without mixing its scale with the asset price.'],
+          ['Compare different asset types', 'Use Gold, Silver, Oil, SPY, and QQQ alongside the crypto tabs for broader context.'],
+          ['Bookmark a view', 'The URL updates with your asset and range, so you can return to it directly.'],
         ].map(([title, desc]) => (
           <div key={String(title)} className="flex gap-3 items-start">
             <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: AMBER }} />

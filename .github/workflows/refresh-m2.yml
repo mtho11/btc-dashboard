@@ -17,7 +17,7 @@ jobs:
       - name: Fetch M2 data from FRED
         run: bash scripts/fetch-m2.sh
 
-      - name: Fetch silver data from Yahoo Finance
+      - name: Fetch commodity and equity data from Yahoo Finance
         run: |
           python3 -c "
 import urllib.request, json

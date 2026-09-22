@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run from project root to refresh precious-metals and WTI crude-oil data.
+# Run from project root to refresh commodity and equity market snapshots.
 python3 -c "
 import urllib.request, json
 

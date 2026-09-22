@@ -7,6 +7,7 @@ import { useM2Data } from './hooks/useM2Data'
 import { sma, deathCrosses, goldenCrosses, priceAboveMa, priceBelowMa } from './lib/indicators'
 import Chart from './components/Chart'
 import AllAssetsChart from './components/AllAssetsChart'
+import ReturnsHeatmap from './components/ReturnsHeatmap'
 import RangeSelector, { isRange, type Range } from './components/RangeSelector'
 import CryptoTabSelector, { isCryptoTab, type CryptoTab } from './components/CryptoTabSelector'
 import PerformanceSection from './components/PerformanceSection'
@@ -46,18 +47,19 @@ export default function App() {
 
   const m2Data = useM2Data()
   const { data: btcData, loading: btcLoading, error: btcError } = useBtcData()
-  const allDelay = (n: number) => cryptoTab === 'ALL' ? n * 1200 : 0
-  const { data: ethData, loading: ethLoading, error: ethError } = useCryptoOhlcData(cryptoTab === 'ETH' || cryptoTab === 'ALL' ? 'ETH-USDT' : null, allDelay(0))
-  const { data: solData, loading: solLoading, error: solError } = useCryptoOhlcData(cryptoTab === 'SOL' || cryptoTab === 'ALL' ? 'SOL-USDT' : null, allDelay(1))
-  const { data: hypeData, loading: hypeLoading, error: hypeError } = useCryptoOhlcData(cryptoTab === 'HYPE' || cryptoTab === 'ALL' ? 'HYPE-USDT' : null, allDelay(2))
-  const { data: zecData, loading: zecLoading, error: zecError } = useCryptoOhlcData(cryptoTab === 'ZEC' || cryptoTab === 'ALL' ? 'ZEC-USDT' : null, allDelay(3))
-  const { data: nearData, loading: nearLoading, error: nearError } = useCryptoOhlcData(cryptoTab === 'NEAR' || cryptoTab === 'ALL' ? 'NEAR-USDT' : null, allDelay(4))
+  const comparisonTab = cryptoTab === 'ALL' || cryptoTab === 'HEATMAP'
+  const allDelay = (n: number) => comparisonTab ? n * 1200 : 0
+  const { data: ethData, loading: ethLoading, error: ethError } = useCryptoOhlcData(cryptoTab === 'ETH' || comparisonTab ? 'ETH-USDT' : null, allDelay(0))
+  const { data: solData, loading: solLoading, error: solError } = useCryptoOhlcData(cryptoTab === 'SOL' || comparisonTab ? 'SOL-USDT' : null, allDelay(1))
+  const { data: hypeData, loading: hypeLoading, error: hypeError } = useCryptoOhlcData(cryptoTab === 'HYPE' || comparisonTab ? 'HYPE-USDT' : null, allDelay(2))
+  const { data: zecData, loading: zecLoading, error: zecError } = useCryptoOhlcData(cryptoTab === 'ZEC' || comparisonTab ? 'ZEC-USDT' : null, allDelay(3))
+  const { data: nearData, loading: nearLoading, error: nearError } = useCryptoOhlcData(cryptoTab === 'NEAR' || comparisonTab ? 'NEAR-USDT' : null, allDelay(4))
   // PAXG (PAX Gold) = 1 troy oz gold, trades on OKX — same live API as BTC/ETH/SOL
-  const { data: goldData, loading: goldLoading, error: goldError } = useCryptoOhlcData(cryptoTab === 'GOLD' || cryptoTab === 'ALL' ? 'PAXG-USDT' : null, allDelay(5))
-  const { data: silverData, loading: silverLoading, error: silverError } = useStaticOhlcData(cryptoTab === 'SILVER' || cryptoTab === 'ALL' ? 'silver.json' : null)
-  const { data: oilData, loading: oilLoading, error: oilError } = useStaticOhlcData(cryptoTab === 'OIL' || cryptoTab === 'ALL' ? 'oil.json' : null)
-  const { data: spyData, loading: spyLoading, error: spyError } = useStaticOhlcData(cryptoTab === 'SPY' || cryptoTab === 'ALL' ? 'spy.json' : null)
-  const { data: qqqData, loading: qqqLoading, error: qqqError } = useStaticOhlcData(cryptoTab === 'QQQ' || cryptoTab === 'ALL' ? 'qqq.json' : null)
+  const { data: goldData, loading: goldLoading, error: goldError } = useCryptoOhlcData(cryptoTab === 'GOLD' || comparisonTab ? 'PAXG-USDT' : null, allDelay(5))
+  const { data: silverData, loading: silverLoading, error: silverError } = useStaticOhlcData(cryptoTab === 'SILVER' || comparisonTab ? 'silver.json' : null)
+  const { data: oilData, loading: oilLoading, error: oilError } = useStaticOhlcData(cryptoTab === 'OIL' || comparisonTab ? 'oil.json' : null)
+  const { data: spyData, loading: spyLoading, error: spyError } = useStaticOhlcData(cryptoTab === 'SPY' || comparisonTab ? 'spy.json' : null)
+  const { data: qqqData, loading: qqqLoading, error: qqqError } = useStaticOhlcData(cryptoTab === 'QQQ' || comparisonTab ? 'qqq.json' : null)
 
   const data = cryptoTab === 'BTC' ? btcData
     : cryptoTab === 'ETH' ? ethData
@@ -172,10 +174,10 @@ export default function App() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <CryptoTabSelector value={cryptoTab} onChange={selectCryptoTab} />
-            {(cryptoTab === 'ALL' ? (btcLoading || ethLoading || solLoading || hypeLoading || zecLoading || nearLoading || goldLoading || silverLoading || oilLoading || spyLoading || qqqLoading) : loading) && (
+            {comparisonTab ? (btcLoading || ethLoading || solLoading || hypeLoading || zecLoading || nearLoading || goldLoading || silverLoading || oilLoading || spyLoading || qqqLoading) && (
               <span className="text-xs text-gray-400 dark:text-gray-500">Loading…</span>
-            )}
-            {cryptoTab !== 'ALL' && error && <span className="text-xs text-red-500">Error: {error}</span>}
+            ) : loading && <span className="text-xs text-gray-400 dark:text-gray-500">Loading…</span>}
+            {!comparisonTab && error && <span className="text-xs text-red-500">Error: {error}</span>}
           </div>
           <RangeSelector value={range} onChange={selectRange} />
         </div>
@@ -187,6 +189,8 @@ export default function App() {
               range={range}
               dark={dark}
             />
+          ) : cryptoTab === 'HEATMAP' ? (
+            <ReturnsHeatmap assets={allAssets} range={range} dark={dark} />
           ) : loading ? (
             <div className="h-full flex flex-col items-center justify-center gap-4 text-gray-400">
               <div className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
@@ -214,13 +218,13 @@ export default function App() {
           )}
         </div>
 
-        {cryptoTab !== 'ALL' && <PerformanceSection data={data} symbol={cryptoTab} />}
+        {!comparisonTab && <PerformanceSection data={data} symbol={cryptoTab} />}
 
         <div className="flex gap-6 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
-          {cryptoTab === 'ALL' ? (
+          {comparisonTab ? (
             <>
-              <span>All assets normalized to % return from range start</span>
-              <span>Silver: nightly refresh · All others: live OKX data</span>
+              <span>{cryptoTab === 'ALL' ? 'All assets normalized to % return from range start' : 'Heatmap values show return over the selected timeframe'}</span>
+              <span>Crypto: live OKX data · M2, commodities, and equities: daily refresh</span>
             </>
           ) : (
             <>
