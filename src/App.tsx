@@ -140,11 +140,6 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight">Mike's Trading Tracker</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {cryptoTab === 'ALL'
-                ? 'All Assets · % Return'
-                : `${cryptoTab === 'GOLD' ? 'Gold' : cryptoTab === 'SILVER' ? 'Silver' : cryptoTab} / USD · Moving Averages`}
-            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
