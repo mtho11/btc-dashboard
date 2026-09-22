@@ -6,7 +6,7 @@ A responsive market dashboard for comparing crypto, commodities, and U.S. equiti
 
 ## Current capabilities
 
-- Asset tabs for **BTC, ETH, SOL, HYPE, ZEC, NEAR, GOLD, SILVER, OIL, SPY,** and **QQQ**.
+- Asset tabs for **BTC, ETH, SOL, SUI, HYPE, ZEC, NEAR, GOLD, SILVER, OIL, SPY,** and **QQQ**.
 - **ALL** view to compare every asset as a normalized percentage return from the selected range start.
 - **HEATMAP** view, directly beside ALL, to rank each asset's percentage return for the selected range with intensity-scaled green/red cells.
 - Daily candlestick charts with 50-day, 200-day, and 200-week moving averages.
@@ -29,7 +29,7 @@ The selected asset and timeframe are saved in the URL, so views are shareable an
 https://mtho11.github.io/btc-dashboard/?asset=ETH&range=1Y
 ```
 
-Supported assets: `ALL`, `BTC`, `ETH`, `SOL`, `HYPE`, `ZEC`, `NEAR`, `GOLD`, `SILVER`, `OIL`, `SPY`, and `QQQ`.
+Supported assets: `ALL`, `HEATMAP`, `BTC`, `ETH`, `SOL`, `SUI`, `HYPE`, `ZEC`, `NEAR`, `GOLD`, `SILVER`, `OIL`, `SPY`, and `QQQ`.
 
 Supported ranges: `1M`, `3M`, `6M`, `1Y`, `2Y`, `5Y`, and `ALL`.
 
@@ -37,7 +37,7 @@ Supported ranges: `1M`, `3M`, `6M`, `1Y`, `2Y`, `5Y`, and `ALL`.
 
 | Data | Source | Refresh behavior |
 | --- | --- | --- |
-| BTC, ETH, SOL, HYPE, ZEC, NEAR, Gold (PAXG) | OKX public API | Loaded live in the browser |
+| BTC, ETH, SOL, SUI, HYPE, ZEC, NEAR, Gold (PAXG) | OKX public API | Loaded live in the browser |
 | U.S. M2 | FRED | Refreshed daily by GitHub Actions |
 | Silver, WTI Oil, SPY, QQQ | Yahoo Finance | Refreshed daily by GitHub Actions |
 

@@ -7,6 +7,7 @@ export const ASSET_COLORS: Record<string, string> = {
   BTC: '#f97316',
   ETH: '#818cf8',
   SOL: '#a855f7',
+  SUI: '#60a5fa',
   HYPE: '#10b981',
   ZEC: '#eab308',
   NEAR: '#14b8a6',

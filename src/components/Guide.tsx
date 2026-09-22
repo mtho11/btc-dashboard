@@ -17,6 +17,7 @@ const VisualTabs = () => (
       ['BTC', '#f97316'],
       ['ETH', '#818cf8'],
       ['SOL', '#a855f7'],
+      ['SUI', '#60a5fa'],
       ['HYPE', '#10b981'],
       ['ZEC', '#eab308'],
       ['NEAR', '#38bdf8'],
@@ -192,7 +193,7 @@ const steps: Step[] = [
   {
     title: 'Welcome to Mike\'s Trading Tracker',
     body: [
-      'Track Bitcoin, Ethereum, Solana, Hyperliquid, Zcash, NEAR, Gold, Silver, Oil, SPY, and QQQ from one dashboard. Use ALL for a normalized comparison, HEATMAP for ranked period returns, or open a single asset for a detailed candlestick view.',
+      'Track Bitcoin, Ethereum, Solana, Sui, Hyperliquid, Zcash, NEAR, Gold, Silver, Oil, SPY, and QQQ from one dashboard. Use ALL for a normalized comparison, HEATMAP for ranked period returns, or open a single asset for a detailed candlestick view.',
       'No account is needed. Crypto data is sourced from OKX; M2 comes from FRED; commodity and equity snapshots are refreshed daily from Yahoo Finance.',
     ],
     tip: 'The selected asset and range are preserved in the URL. For example, bookmark ?asset=ETH&range=1Y to return to the same view.',
