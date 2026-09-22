@@ -194,9 +194,9 @@ const steps: Step[] = [
     title: 'Welcome to Mike\'s Trading Tracker',
     body: [
       'Track Bitcoin, Ethereum, Solana, Sui, Hyperliquid, Zcash, NEAR, Gold, Silver, Oil, SPY, and QQQ from one dashboard. Use ALL for a normalized comparison, HEATMAP for ranked period returns, or open a single asset for a detailed candlestick view.',
-      'No account is needed. Crypto data is sourced from OKX; M2 comes from FRED; commodity and equity snapshots are refreshed daily from Yahoo Finance.',
+      'The ticker tape at the top shows each tracked asset\'s one-day return. Crypto data is sourced from OKX; M2 comes from FRED; commodity and equity snapshots are refreshed daily from Yahoo Finance.',
     ],
-    tip: 'The selected asset and range are preserved in the URL. For example, bookmark ?asset=ETH&range=1Y to return to the same view.',
+    tip: 'Use the Refresh control in the top bar to choose Off, 5 minutes, 15 minutes, 30 minutes, or 1 hour. The selected asset and range are preserved in the URL, so you can bookmark any view.',
     visual: <VisualTabs />,
   },
   {

@@ -21,14 +21,14 @@ async function fetchBatch(after?: string): Promise<OhlcPoint[]> {
   }))
 }
 
-export function useBtcData() {
+export function useBtcData(refreshKey = 0) {
   const [data, setData] = useState<OhlcPoint[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const cache = useRef<OhlcPoint[] | null>(null)
 
   useEffect(() => {
-    if (cache.current) {
+    if (cache.current && refreshKey === 0) {
       setData(cache.current)
       setLoading(false)
       return
@@ -74,7 +74,7 @@ export function useBtcData() {
 
     fetchData()
     return () => { cancelled = true }
-  }, [])
+  }, [refreshKey])
 
   return { data, loading, error }
 }

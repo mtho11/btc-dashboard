@@ -15,6 +15,8 @@ A responsive market dashboard for comparing crypto, commodities, and U.S. equiti
 - Dashed period-high and period-low levels with values displayed on the price scale.
 - A US M2 liquidity overlay on the left axis; the selected asset price and moving averages use the right axis.
 - Performance panel for daily, weekly, monthly, YTD, one-year, and two-year returns.
+- Configurable auto-refresh in the top bar: Off, 5 minutes, 15 minutes, 30 minutes, or 1 hour (defaults to 15 minutes).
+- Animated top ticker tape with each tracked asset's latest one-day return.
 - Light and dark themes, responsive layout, crosshair inspection, zooming, and panning.
 
 ## Dashboard guide

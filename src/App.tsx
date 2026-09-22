@@ -13,6 +13,8 @@ import CryptoTabSelector, { isCryptoTab, type CryptoTab } from './components/Cry
 import PerformanceSection from './components/PerformanceSection'
 import ThemeToggle from './components/ThemeToggle'
 import Guide from './components/Guide'
+import RefreshIntervalSelector, { type RefreshInterval } from './components/RefreshIntervalSelector'
+import TickerTape from './components/TickerTape'
 
 function useSystemDark() {
   const [dark, setDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -36,6 +38,15 @@ export default function App() {
     const asset = new URLSearchParams(window.location.search).get('asset')
     return isCryptoTab(asset) ? asset : 'BTC'
   })
+  const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(() => {
+    try {
+      const rawSaved = localStorage.getItem('mtt_refresh_interval')
+      if (rawSaved === null) return 900_000
+      const saved = Number(rawSaved)
+      return [0, 300_000, 900_000, 1_800_000, 3_600_000].includes(saved) ? saved as RefreshInterval : 900_000
+    } catch { return 900_000 }
+  })
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const [showGuide, setShowGuide] = useState(() => {
     try { return !localStorage.getItem('mtt_guide_seen') } catch { return false }
@@ -45,22 +56,31 @@ export default function App() {
     setShowGuide(false)
   }
 
-  const m2Data = useM2Data()
-  const { data: btcData, loading: btcLoading, error: btcError } = useBtcData()
+  useEffect(() => {
+    try { localStorage.setItem('mtt_refresh_interval', String(refreshInterval)) } catch {}
+    if (refreshInterval === 0) return
+    const intervalId = window.setInterval(() => setRefreshKey((key) => key + 1), refreshInterval)
+    return () => window.clearInterval(intervalId)
+  }, [refreshInterval])
+
+  const m2Data = useM2Data(refreshKey)
+  const { data: btcData, loading: btcLoading, error: btcError } = useBtcData(refreshKey)
   const comparisonTab = cryptoTab === 'ALL' || cryptoTab === 'HEATMAP'
-  const allDelay = (n: number) => comparisonTab ? n * 1200 : 0
-  const { data: ethData, loading: ethLoading, error: ethError } = useCryptoOhlcData(cryptoTab === 'ETH' || comparisonTab ? 'ETH-USDT' : null, allDelay(0))
-  const { data: solData, loading: solLoading, error: solError } = useCryptoOhlcData(cryptoTab === 'SOL' || comparisonTab ? 'SOL-USDT' : null, allDelay(1))
-  const { data: suiData, loading: suiLoading, error: suiError } = useCryptoOhlcData(cryptoTab === 'SUI' || comparisonTab ? 'SUI-USDT' : null, allDelay(2))
-  const { data: hypeData, loading: hypeLoading, error: hypeError } = useCryptoOhlcData(cryptoTab === 'HYPE' || comparisonTab ? 'HYPE-USDT' : null, allDelay(3))
-  const { data: zecData, loading: zecLoading, error: zecError } = useCryptoOhlcData(cryptoTab === 'ZEC' || comparisonTab ? 'ZEC-USDT' : null, allDelay(4))
-  const { data: nearData, loading: nearLoading, error: nearError } = useCryptoOhlcData(cryptoTab === 'NEAR' || comparisonTab ? 'NEAR-USDT' : null, allDelay(5))
+  // The top ticker displays every tracked asset, so it keeps all asset data warm in the background.
+  const loadAllAssetData = true
+  const allDelay = (n: number) => loadAllAssetData ? n * 1200 : 0
+  const { data: ethData, loading: ethLoading, error: ethError } = useCryptoOhlcData(cryptoTab === 'ETH' || loadAllAssetData ? 'ETH-USDT' : null, allDelay(0), refreshKey)
+  const { data: solData, loading: solLoading, error: solError } = useCryptoOhlcData(cryptoTab === 'SOL' || loadAllAssetData ? 'SOL-USDT' : null, allDelay(1), refreshKey)
+  const { data: suiData, loading: suiLoading, error: suiError } = useCryptoOhlcData(cryptoTab === 'SUI' || loadAllAssetData ? 'SUI-USDT' : null, allDelay(2), refreshKey)
+  const { data: hypeData, loading: hypeLoading, error: hypeError } = useCryptoOhlcData(cryptoTab === 'HYPE' || loadAllAssetData ? 'HYPE-USDT' : null, allDelay(3), refreshKey)
+  const { data: zecData, loading: zecLoading, error: zecError } = useCryptoOhlcData(cryptoTab === 'ZEC' || loadAllAssetData ? 'ZEC-USDT' : null, allDelay(4), refreshKey)
+  const { data: nearData, loading: nearLoading, error: nearError } = useCryptoOhlcData(cryptoTab === 'NEAR' || loadAllAssetData ? 'NEAR-USDT' : null, allDelay(5), refreshKey)
   // PAXG (PAX Gold) = 1 troy oz gold, trades on OKX — same live API as BTC/ETH/SOL
-  const { data: goldData, loading: goldLoading, error: goldError } = useCryptoOhlcData(cryptoTab === 'GOLD' || comparisonTab ? 'PAXG-USDT' : null, allDelay(6))
-  const { data: silverData, loading: silverLoading, error: silverError } = useStaticOhlcData(cryptoTab === 'SILVER' || comparisonTab ? 'silver.json' : null)
-  const { data: oilData, loading: oilLoading, error: oilError } = useStaticOhlcData(cryptoTab === 'OIL' || comparisonTab ? 'oil.json' : null)
-  const { data: spyData, loading: spyLoading, error: spyError } = useStaticOhlcData(cryptoTab === 'SPY' || comparisonTab ? 'spy.json' : null)
-  const { data: qqqData, loading: qqqLoading, error: qqqError } = useStaticOhlcData(cryptoTab === 'QQQ' || comparisonTab ? 'qqq.json' : null)
+  const { data: goldData, loading: goldLoading, error: goldError } = useCryptoOhlcData(cryptoTab === 'GOLD' || loadAllAssetData ? 'PAXG-USDT' : null, allDelay(6), refreshKey)
+  const { data: silverData, loading: silverLoading, error: silverError } = useStaticOhlcData(cryptoTab === 'SILVER' || loadAllAssetData ? 'silver.json' : null, refreshKey)
+  const { data: oilData, loading: oilLoading, error: oilError } = useStaticOhlcData(cryptoTab === 'OIL' || loadAllAssetData ? 'oil.json' : null, refreshKey)
+  const { data: spyData, loading: spyLoading, error: spyError } = useStaticOhlcData(cryptoTab === 'SPY' || loadAllAssetData ? 'spy.json' : null, refreshKey)
+  const { data: qqqData, loading: qqqLoading, error: qqqError } = useStaticOhlcData(cryptoTab === 'QQQ' || loadAllAssetData ? 'qqq.json' : null, refreshKey)
 
   const data = cryptoTab === 'BTC' ? btcData
     : cryptoTab === 'ETH' ? ethData
@@ -165,6 +185,7 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <RefreshIntervalSelector value={refreshInterval} onChange={setRefreshInterval} />
           <button
             onClick={() => setShowGuide(true)}
             className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-500"
@@ -175,7 +196,9 @@ export default function App() {
         </div>
       </header>
 
-      <main className="p-6 flex flex-col gap-4" style={{ height: 'calc(100vh - 73px)' }}>
+      <TickerTape assets={allAssets} />
+
+      <main className="p-6 flex flex-col gap-4" style={{ height: 'calc(100vh - 109px)' }}>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <CryptoTabSelector value={cryptoTab} onChange={selectCryptoTab} />

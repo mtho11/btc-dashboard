@@ -26,14 +26,14 @@ async function fetchBatch(instId: string, after?: string, attempt = 0): Promise<
   }))
 }
 
-export function useCryptoOhlcData(instId: string | null, delayMs = 0) {
+export function useCryptoOhlcData(instId: string | null, delayMs = 0, refreshKey = 0) {
   const [data, setData] = useState<OhlcPoint[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!instId) { setData([]); setLoading(false); return }
-    if (cache[instId]) { setData(cache[instId]); setLoading(false); return }
+    if (cache[instId] && refreshKey === 0) { setData(cache[instId]); setLoading(false); return }
 
     let cancelled = false
     setLoading(true)
@@ -73,7 +73,7 @@ export function useCryptoOhlcData(instId: string | null, delayMs = 0) {
 
     fetchData()
     return () => { cancelled = true }
-  }, [instId])
+  }, [instId, refreshKey])
 
   return { data, loading, error }
 }
