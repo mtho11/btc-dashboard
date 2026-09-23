@@ -225,7 +225,7 @@ export default function App() {
             <span className="text-white font-bold text-sm">₿</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight">Mike's Trading Tracker</h1>
+            <h1 className="text-lg font-bold tracking-tight">Market Tracker</h1>
           </div>
         </div>
         <div className="flex items-center gap-2">

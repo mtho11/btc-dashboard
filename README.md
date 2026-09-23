@@ -1,4 +1,4 @@
-# Mike's Trading Tracker
+# Market Tracker
 
 A responsive market dashboard for comparing crypto, commodities, and U.S. equities. It combines a normalized multi-asset view with detailed candlestick charts, moving averages, market-structure markers, and return snapshots.
 
@@ -11,7 +11,7 @@ A responsive market dashboard for comparing crypto, commodities, and U.S. equiti
 - **HEATMAP** view, directly beside ALL, to rank each asset's percentage return with intensity-scaled green/red cells and its percentage off the highest loaded price. Its dedicated intervals are 1D, 1W, 1M, MTD, 6M, YTD, and 1Y (defaults to 1D).
 - Daily candlestick charts with 50-day, 200-day, and 200-week moving averages.
 - Green golden-cross and red death-cross arrows at 50D/200D intersections, each with a matching semi-transparent dashed date guide.
-- Green/red dots when price crosses the 50-day moving average.
+- 50%-transparent light green/red arrows anchored to the 50-day moving average when a closing price crosses above/below it.
 - Dashed period-high and period-low levels with values displayed on the price scale.
 - A US M2 liquidity overlay on the left axis; the selected asset price and moving averages use the right axis.
 - Performance panel for daily, weekly, monthly, YTD, one-year, and two-year returns.

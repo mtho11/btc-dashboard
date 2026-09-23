@@ -112,13 +112,13 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
       el.style.top = `${y!}px`
     })
 
-    // Price/50D MA cross dots
-    overlayRef.current.querySelectorAll<HTMLElement>('[data-pdot]').forEach((el) => {
-      const { x, y, ok } = position(Number(el.dataset.pdot) as Time, Number(el.dataset.price))
+    // Price/50D MA crossover arrows, anchored at the moving average.
+    overlayRef.current.querySelectorAll<HTMLElement>('[data-price-arrow]').forEach((el) => {
+      const { x, y, ok } = position(Number(el.dataset.priceArrow) as Time, Number(el.dataset.price))
       if (!ok) { el.style.display = 'none'; return }
       el.style.display = 'block'
-      el.style.left = `${x! + leftOffset - 5}px`
-      el.style.top = `${y! - 5}px`
+      el.style.left = `${x! + leftOffset - 7}px`
+      el.style.top = el.dataset.dir === 'price-up' ? `${y! - 1}px` : `${y! - 13}px`
     })
   }, [deathCrosses, goldenCrosses, priceBuys, priceSells])
 
@@ -427,21 +427,23 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
               className="absolute" style={{ display: 'none', width: '1px', bottom: '28px',
                 borderLeft: '1px dashed rgba(34,197,94,0.5)' }} />
           ))}
-          {/* Price/50D MA cross dots — soft buy (green) */}
+          {/* Price/50D MA close-cross arrows — 50% transparent and anchored to the 50D MA */}
           {priceBuys.map((c) => (
-            <div key={`pb-${c.time}`} data-pdot={c.time} data-price={ma50Map.get(c.time) ?? 0}
-              className="absolute rounded-full"
-              style={{ display: 'none', width: 10, height: 10,
-                background: 'rgba(34,197,94,0.85)', border: '1.5px solid rgba(34,197,94,0.4)',
-                boxShadow: '0 0 4px rgba(34,197,94,0.5)' }} />
+            <div key={`pb-${c.time}`} data-price-arrow={c.time} data-dir="price-up" data-price={ma50Map.get(c.time) ?? 0}
+              className="absolute" style={{ display: 'none' }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-label="Close crossed above 50-day moving average">
+                <path d="M7 1 1 8h4v5h4V8h4L7 1Z" fill="rgba(134,239,172,0.5)" />
+              </svg>
+            </div>
           ))}
-          {/* Price/50D MA cross dots — soft sell (red) */}
+          {/* Price/50D MA close-cross arrows — 50% transparent and anchored to the 50D MA */}
           {priceSells.map((c) => (
-            <div key={`ps-${c.time}`} data-pdot={c.time} data-price={ma50Map.get(c.time) ?? 0}
-              className="absolute rounded-full"
-              style={{ display: 'none', width: 10, height: 10,
-                background: 'rgba(239,68,68,0.85)', border: '1.5px solid rgba(239,68,68,0.4)',
-                boxShadow: '0 0 4px rgba(239,68,68,0.5)' }} />
+            <div key={`ps-${c.time}`} data-price-arrow={c.time} data-dir="price-down" data-price={ma50Map.get(c.time) ?? 0}
+              className="absolute" style={{ display: 'none' }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-label="Close crossed below 50-day moving average">
+                <path d="M7 13 1 6h4V1h4v5h4l-6 7Z" fill="rgba(252,165,165,0.5)" />
+              </svg>
+            </div>
           ))}
         </div>
       </div>

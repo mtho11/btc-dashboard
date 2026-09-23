@@ -56,7 +56,7 @@ const VisualTickerAndRefresh = () => (
     {/* Header and refresh control snapshot */}
     <circle cx="16" cy="45" r="10" fill="#f97316"/>
     <text x="13" y="49" fontSize="10" fill="#fff" fontWeight="700" fontFamily="Inter, sans-serif">₿</text>
-    <text x="32" y="47" fontSize="10" fill="#f8fafc" fontWeight="700" fontFamily="Inter, sans-serif">Mike's Trading Tracker</text>
+    <text x="32" y="47" fontSize="10" fill="#f8fafc" fontWeight="700" fontFamily="Inter, sans-serif">Market Tracker</text>
     <rect x="284" y="35" width="96" height="21" rx="5" fill="#1f2937" stroke="#334155"/>
     <path d="M294 47a4 4 0 1 0 1-3" fill="none" stroke="#22c55e" strokeWidth="1.2" strokeLinecap="round"/>
     <text x="302" y="48.5" fontSize="7" fill="#cbd5e1" fontFamily="Inter, sans-serif">Refresh</text>
@@ -245,7 +245,7 @@ type Step = {
 
 const steps: Step[] = [
   {
-    title: 'Welcome to Mike\'s Trading Tracker',
+    title: 'Welcome to Market Tracker',
     body: [
       'Track Bitcoin, Ethereum, Solana, Sui, Hyperliquid, Zcash, NEAR, Gold, Silver, Oil, SPY, and QQQ from one dashboard. Use ALL for a normalized comparison, HEATMAP for ranked period returns, or open a single asset for a detailed candlestick view.',
       'The ticker tape at the top shows each tracked asset\'s one-day return. Crypto data is sourced from OKX; M2 comes from FRED; commodity and equity snapshots are refreshed daily from Yahoo Finance.',
@@ -302,7 +302,7 @@ const steps: Step[] = [
     title: 'Death & Golden Crosses',
     body: [
       'The chart marks intersections between the 50-day and 200-day averages. A green up arrow marks a golden cross (50D moves above 200D); a red down arrow marks a death cross (50D moves below 200D). Each marker has a matching dashed guide to the date axis.',
-      'Small green and red dots mark where price crosses the 50-day average. Use longer ranges to see more historical signals.',
+      'A light green up-arrow marks a close crossing above the 50-day average; a light red down-arrow marks a close crossing below it. Both are 50% transparent and anchored directly on the 50D MA.',
     ],
     tip: 'Crosses are lagging signals: they describe a change already underway and should be considered alongside price action and your own risk process.',
     visual: <VisualCrosses />,
