@@ -13,6 +13,7 @@ const RANGE_SECONDS: Partial<Record<HeatmapInterval, number>> = {
 interface HeatmapEntry {
   label: string
   returnPercent: number | null
+  offHighPercent: number | null
 }
 
 interface Props {
@@ -57,9 +58,23 @@ function formatReturn(value: number | null) {
   return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
 }
 
+function percentOffHigh(data: OhlcPoint[]): number | null {
+  const latest = data[data.length - 1]
+  if (!latest) return null
+  const high = data.reduce((maximum, point) => Math.max(maximum, point.high), Number.NEGATIVE_INFINITY)
+  if (!Number.isFinite(high) || high === 0) return null
+  return ((latest.close - high) / high) * 100
+}
+
+function formatOffHigh(value: number | null) {
+  if (value === null) return '— off high'
+  if (value >= -0.01) return 'At high'
+  return `${value.toFixed(1)}% off high`
+}
+
 export default function ReturnsHeatmap({ assets, range, dark }: Props) {
   const entries: HeatmapEntry[] = assets
-    .map(({ label, data }) => ({ label, returnPercent: calculateReturn(data, range) }))
+    .map(({ label, data }) => ({ label, returnPercent: calculateReturn(data, range), offHighPercent: percentOffHigh(data) }))
     .sort((a, b) => (b.returnPercent ?? -Infinity) - (a.returnPercent ?? -Infinity))
   const maxMagnitude = Math.max(1, ...entries.map((entry) => Math.abs(entry.returnPercent ?? 0)))
 
@@ -74,7 +89,7 @@ export default function ReturnsHeatmap({ assets, range, dark }: Props) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-        {entries.map(({ label, returnPercent }) => {
+        {entries.map(({ label, returnPercent, offHighPercent }) => {
           const positive = (returnPercent ?? 0) >= 0
           const intensity = returnPercent === null ? 0 : 0.1 + (Math.abs(returnPercent) / maxMagnitude) * 0.68
           const color = returnPercent === null ? '#64748b' : positive ? '#22c55e' : '#ef4444'
@@ -98,7 +113,16 @@ export default function ReturnsHeatmap({ assets, range, dark }: Props) {
               style={{ background, borderColor: `${color}55` }}
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="font-semibold" style={{ color: ASSET_COLORS[label] ?? color }}>{label}</span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="font-semibold" style={{ color: ASSET_COLORS[label] ?? color }}>{label}</span>
+                  <span
+                    className="truncate text-xs font-medium"
+                    style={{ color: offHighPercent === null ? '#94a3b8' : offHighPercent >= -0.01 ? '#22c55e' : (dark ? '#fecaca' : '#b91c1c') }}
+                    title="Percentage below the highest loaded candle high"
+                  >
+                    {formatOffHigh(offHighPercent)}
+                  </span>
+                </div>
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: ASSET_COLORS[label] ?? color }} />
               </div>
               <div className="mt-5">
