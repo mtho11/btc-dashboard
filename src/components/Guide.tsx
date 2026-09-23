@@ -275,7 +275,7 @@ const steps: Step[] = [
     title: 'Scan returns in HEATMAP',
     body: [
       'The HEATMAP tab sits beside ALL and ranks every tracked asset by percentage return. Its dedicated interval control offers 1D, 1W, 1M, MTD, 6M, YTD, and 1Y, with 1D selected by default. Green cells are positive, red cells are negative, and stronger color intensity indicates a larger move.',
-      'Each card also shows the percentage off its highest loaded candle high directly after the ticker symbol. This makes current drawdowns visible alongside the selected-period return.',
+      'Each card also shows the percentage off its highest loaded candle high directly after the ticker symbol, plus a compact period high–low rail below the return. The diamond on that rail shows where the latest close sits in the selected interval.',
     ],
     tip: 'Use HEATMAP when you want a fast ranking; switch to ALL when you want to see how those returns developed over time. Heatmap interval selection is independent from the chart range.',
     visual: <VisualAllChart />,

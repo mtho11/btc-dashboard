@@ -14,6 +14,9 @@ interface HeatmapEntry {
   label: string
   returnPercent: number | null
   offHighPercent: number | null
+  periodLow: number | null
+  periodHigh: number | null
+  currentPosition: number | null
 }
 
 interface Props {
@@ -72,9 +75,32 @@ function formatOffHigh(value: number | null) {
   return `${value.toFixed(1)}% off high`
 }
 
+function periodRange(data: OhlcPoint[], range: HeatmapInterval) {
+  const last = data[data.length - 1]
+  if (!last) return { periodLow: null, periodHigh: null, currentPosition: null }
+  const periodStart = baselineTime(last.time, range)
+  const firstIndex = data.findIndex((point) => point.time >= periodStart)
+  const points = firstIndex === -1 ? [last] : data.slice(firstIndex)
+  const periodLow = points.reduce((minimum, point) => Math.min(minimum, point.low), Number.POSITIVE_INFINITY)
+  const periodHigh = points.reduce((maximum, point) => Math.max(maximum, point.high), Number.NEGATIVE_INFINITY)
+  if (!Number.isFinite(periodLow) || !Number.isFinite(periodHigh)) {
+    return { periodLow: null, periodHigh: null, currentPosition: null }
+  }
+  const currentPosition = periodHigh === periodLow
+    ? 0.5
+    : Math.min(1, Math.max(0, (last.close - periodLow) / (periodHigh - periodLow)))
+  return { periodLow, periodHigh, currentPosition }
+}
+
+function formatPrice(value: number | null) {
+  if (value === null) return '—'
+  const maximumFractionDigits = value >= 1000 ? 0 : value >= 1 ? 2 : 4
+  return `$${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits })}`
+}
+
 export default function ReturnsHeatmap({ assets, range, dark }: Props) {
   const entries: HeatmapEntry[] = assets
-    .map(({ label, data }) => ({ label, returnPercent: calculateReturn(data, range), offHighPercent: percentOffHigh(data) }))
+    .map(({ label, data }) => ({ label, returnPercent: calculateReturn(data, range), offHighPercent: percentOffHigh(data), ...periodRange(data, range) }))
     .sort((a, b) => (b.returnPercent ?? -Infinity) - (a.returnPercent ?? -Infinity))
   const maxMagnitude = Math.max(1, ...entries.map((entry) => Math.abs(entry.returnPercent ?? 0)))
 
@@ -89,7 +115,7 @@ export default function ReturnsHeatmap({ assets, range, dark }: Props) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-        {entries.map(({ label, returnPercent, offHighPercent }) => {
+        {entries.map(({ label, returnPercent, offHighPercent, periodLow, periodHigh, currentPosition }) => {
           const positive = (returnPercent ?? 0) >= 0
           const intensity = returnPercent === null ? 0 : 0.1 + (Math.abs(returnPercent) / maxMagnitude) * 0.68
           const color = returnPercent === null ? '#64748b' : positive ? '#22c55e' : '#ef4444'
@@ -105,11 +131,16 @@ export default function ReturnsHeatmap({ assets, range, dark }: Props) {
               : positive
                 ? (dark ? '#86efac' : '#15803d')
                 : (dark ? '#fca5a5' : '#b91c1c')
+          const mutedColor = returnPercent === null
+            ? '#94a3b8'
+            : intensity > 0.52
+              ? 'rgba(255,255,255,0.82)'
+              : (dark ? '#94a3b8' : '#64748b')
 
           return (
             <div
               key={label}
-              className="min-h-32 rounded-xl border p-4 flex flex-col justify-between transition-transform hover:-translate-y-0.5"
+              className="min-h-44 rounded-xl border p-4 flex flex-col justify-between transition-transform hover:-translate-y-0.5"
               style={{ background, borderColor: `${color}55` }}
             >
               <div className="flex items-center justify-between gap-3">
@@ -129,8 +160,23 @@ export default function ReturnsHeatmap({ assets, range, dark }: Props) {
                 <div className="text-3xl font-bold tabular-nums" style={{ color: valueColor }}>
                   {formatReturn(returnPercent)}
                 </div>
-                <div className="mt-1 text-xs font-medium" style={{ color: returnPercent === null ? '#94a3b8' : intensity > 0.52 ? 'rgba(255,255,255,0.82)' : (dark ? '#94a3b8' : '#64748b') }}>
+                <div className="mt-1 text-xs font-medium" style={{ color: mutedColor }}>
                   {range} return
+                </div>
+              </div>
+              <div className="mt-4" aria-label={`${range} price range: ${formatPrice(periodLow)} to ${formatPrice(periodHigh)}`}>
+                <div className="relative h-3">
+                  <div className="absolute inset-x-0 top-1.5 h-px" style={{ background: mutedColor }} />
+                  {currentPosition !== null && (
+                    <span
+                      className="absolute top-0 h-3 w-3 -translate-x-1/2 rotate-45 border"
+                      style={{ left: `${currentPosition * 100}%`, background: ASSET_COLORS[label] ?? '#f8fafc', borderColor: 'rgba(255,255,255,0.9)', boxShadow: '0 1px 3px rgba(0,0,0,0.35)' }}
+                    />
+                  )}
+                </div>
+                <div className="mt-1 flex items-center justify-between gap-3 text-xs font-medium tabular-nums" style={{ color: mutedColor }}>
+                  <span>{formatPrice(periodLow)}</span>
+                  <span>{formatPrice(periodHigh)}</span>
                 </div>
               </div>
             </div>
