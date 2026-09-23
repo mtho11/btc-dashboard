@@ -15,6 +15,7 @@ import ThemeToggle from './components/ThemeToggle'
 import Guide from './components/Guide'
 import RefreshIntervalSelector, { type RefreshInterval } from './components/RefreshIntervalSelector'
 import TickerTape from './components/TickerTape'
+import HeatmapIntervalSelector, { isHeatmapInterval, type HeatmapInterval } from './components/HeatmapIntervalSelector'
 
 function useSystemDark() {
   const [dark, setDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -42,6 +43,10 @@ export default function App() {
       if (asset && custom.some(t => t.symbol === asset)) return asset
     } catch {}
     return 'BTC'
+  })
+  const [heatmapInterval, setHeatmapInterval] = useState<HeatmapInterval>(() => {
+    const interval = new URLSearchParams(window.location.search).get('heatmapRange')
+    return isHeatmapInterval(interval) ? interval : '1D'
   })
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(() => {
     try {
@@ -155,9 +160,11 @@ export default function App() {
       const params = new URLSearchParams(window.location.search)
       const asset = params.get('asset')
       const timeframe = params.get('range')
+      const heatmapRange = params.get('heatmapRange')
       if (isCryptoTab(asset)) setCryptoTab(asset)
       else if (asset && customTabs.some(t => t.symbol === asset)) setCryptoTab(asset)
       if (isRange(timeframe)) setRange(timeframe)
+      if (isHeatmapInterval(heatmapRange)) setHeatmapInterval(heatmapRange)
     }
     window.addEventListener('popstate', syncFromUrl)
     return () => window.removeEventListener('popstate', syncFromUrl)
@@ -175,6 +182,13 @@ export default function App() {
     url.searchParams.set('range', timeframe)
     window.history.pushState({}, '', url)
     setRange(timeframe)
+  }
+
+  const selectHeatmapInterval = (interval: HeatmapInterval) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('heatmapRange', interval)
+    window.history.pushState({}, '', url)
+    setHeatmapInterval(interval)
   }
 
   const allAssets = useMemo(() => [
@@ -241,7 +255,9 @@ export default function App() {
             ) : loading && <span className="text-xs text-gray-400 dark:text-gray-500">Loading…</span>}
             {!comparisonTab && error && <span className="text-xs text-red-500">Error: {error}</span>}
           </div>
-          <RangeSelector value={range} onChange={selectRange} />
+          {cryptoTab === 'HEATMAP'
+            ? <HeatmapIntervalSelector value={heatmapInterval} onChange={selectHeatmapInterval} />
+            : <RangeSelector value={range} onChange={selectRange} />}
         </div>
 
         <div className="flex-1 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 overflow-hidden shadow-sm">
@@ -252,7 +268,7 @@ export default function App() {
               dark={dark}
             />
           ) : cryptoTab === 'HEATMAP' ? (
-            <ReturnsHeatmap assets={allAssets} range={range} dark={dark} />
+            <ReturnsHeatmap assets={allAssets} range={heatmapInterval} dark={dark} />
           ) : loading ? (
             <div className="h-full flex flex-col items-center justify-center gap-4 text-gray-400">
               <div className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />

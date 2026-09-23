@@ -1,14 +1,13 @@
 import type { OhlcPoint } from '../lib/indicators'
-import type { Range } from './RangeSelector'
+import type { HeatmapInterval } from './HeatmapIntervalSelector'
 import { ASSET_COLORS, type AssetData } from './AllAssetsChart'
 
-const RANGE_SECONDS: Record<Range, number> = {
+const RANGE_SECONDS: Partial<Record<HeatmapInterval, number>> = {
+  '1D': 86400,
+  '1W': 7 * 86400,
   '1M': 30 * 86400,
-  '3M': 90 * 86400,
   '6M': 180 * 86400,
   '1Y': 365 * 86400,
-  '2Y': 730 * 86400,
-  '5Y': 1825 * 86400,
 }
 
 interface HeatmapEntry {
@@ -18,17 +17,39 @@ interface HeatmapEntry {
 
 interface Props {
   assets: AssetData[]
-  range: Range
+  range: HeatmapInterval
   dark: boolean
 }
 
-function calculateReturn(data: OhlcPoint[], range: Range): number | null {
+function closeAtOrBefore(data: OhlcPoint[], targetTime: number): number | null {
+  let lower = 0
+  let upper = data.length - 1
+  let result: number | null = null
+  while (lower <= upper) {
+    const middle = Math.floor((lower + upper) / 2)
+    if (data[middle].time <= targetTime) {
+      result = data[middle].close
+      lower = middle + 1
+    } else {
+      upper = middle - 1
+    }
+  }
+  return result
+}
+
+function baselineTime(lastTime: number, range: HeatmapInterval): number {
+  const lastDate = new Date(lastTime * 1000)
+  if (range === 'MTD') return Math.floor(Date.UTC(lastDate.getUTCFullYear(), lastDate.getUTCMonth(), 1) / 1000)
+  if (range === 'YTD') return Math.floor(Date.UTC(lastDate.getUTCFullYear(), 0, 1) / 1000)
+  return lastTime - (RANGE_SECONDS[range] ?? 0)
+}
+
+function calculateReturn(data: OhlcPoint[], range: HeatmapInterval): number | null {
   if (data.length === 0) return null
   const last = data[data.length - 1]
-  const startTime = last.time - RANGE_SECONDS[range]
-  const first = data.find((point) => point.time >= startTime)
-  if (!first || first.close === 0) return null
-  return ((last.close - first.close) / first.close) * 100
+  const baseline = closeAtOrBefore(data, baselineTime(last.time, range))
+  if (!baseline || baseline === 0) return null
+  return ((last.close - baseline) / baseline) * 100
 }
 
 function formatReturn(value: number | null) {

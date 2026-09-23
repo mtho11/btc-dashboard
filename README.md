@@ -8,7 +8,7 @@ A responsive market dashboard for comparing crypto, commodities, and U.S. equiti
 
 - Asset tabs for **BTC, ETH, SOL, SUI, HYPE, ZEC, NEAR, GOLD, SILVER, OIL, SPY,** and **QQQ**.
 - **ALL** view to compare every asset as a normalized percentage return from the selected range start.
-- **HEATMAP** view, directly beside ALL, to rank each asset's percentage return for the selected range with intensity-scaled green/red cells.
+- **HEATMAP** view, directly beside ALL, to rank each asset's percentage return with intensity-scaled green/red cells. Its dedicated intervals are 1D, 1W, 1M, MTD, 6M, YTD, and 1Y (defaults to 1D).
 - Daily candlestick charts with 50-day, 200-day, and 200-week moving averages.
 - Green golden-cross and red death-cross arrows at 50D/200D intersections, each with a matching semi-transparent dashed date guide.
 - Green/red dots when price crosses the 50-day moving average.
