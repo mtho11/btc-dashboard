@@ -33,16 +33,31 @@ export function useCryptoOhlcData(instId: string | null, delayMs = 0, refreshKey
 
   useEffect(() => {
     if (!instId) { setData([]); setLoading(false); return }
-    if (cache[instId] && refreshKey === 0) { setData(cache[instId]); setLoading(false); return }
+    const cached = cache[instId]
+    if (cached && refreshKey === 0) { setData(cached); setLoading(false); return }
 
     let cancelled = false
-    setLoading(true)
+    if (cached) setData(cached)
+    else setLoading(true)
     setError(null)
+
+    async function refreshLatest(existing: OhlcPoint[]) {
+      const latest = await fetchBatch(instId!)
+      const byTime = new Map(existing.map((p) => [p.time, p]))
+      for (const p of latest) byTime.set(p.time, p)
+      return [...byTime.values()].sort((a, b) => a.time - b.time)
+    }
 
     async function fetchData() {
       try {
         if (delayMs > 0) await new Promise(r => setTimeout(r, delayMs))
         if (cancelled) return
+
+        if (cached) {
+          const merged = await refreshLatest(cached)
+          if (!cancelled) { cache[instId!] = merged; setData(merged) }
+          return
+        }
 
         const allPoints: OhlcPoint[] = []
         let after: string | undefined

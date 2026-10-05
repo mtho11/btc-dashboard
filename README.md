@@ -39,9 +39,8 @@ Supported ranges: `1M`, `3M`, `6M`, `1Y`, `2Y`, and `5Y`.
 
 | Data | Source | Refresh behavior |
 | --- | --- | --- |
-| BTC, ETH, SOL, SUI, HYPE, ZEC, NEAR, Gold (PAXG) | OKX public API | Loaded live in the browser |
-| U.S. M2 | FRED | Refreshed daily by GitHub Actions |
-| Silver, WTI Oil, SPY, QQQ | Yahoo Finance | Refreshed daily by GitHub Actions |
+| BTC, ETH, SOL, SUI, HYPE, ZEC, NEAR, Gold (PAXG), Silver (XAG), WTI Oil (CL), SPY, QQQ | OKX public API | Loaded live in the browser; refreshed on the selected interval (default 15 min) |
+| U.S. M2 | FRED | Stored in `public/m2.json`, refreshed daily by GitHub Actions (monthly series) |
 
 The crypto chart requests approximately 1,800 daily candles so the 200-week moving average has enough history to populate. Market data is informational only and may be delayed or unavailable.
 
