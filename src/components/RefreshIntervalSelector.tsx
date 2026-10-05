@@ -20,7 +20,6 @@ export default function RefreshIntervalSelector({ value, onChange }: Props) {
         <path d="M13.3 7.1A5.5 5.5 0 1 1 11.8 3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
         <path d="M11.4 1.8v2.6H14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
-      <span>Refresh</span>
       <select
         aria-label="Auto-refresh interval"
         value={value}
