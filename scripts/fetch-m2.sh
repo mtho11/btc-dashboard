@@ -15,4 +15,4 @@ for date_str, value_str in reader:
 
 print(json.dumps(rows))
 " > public/m2.json
-echo "Saved $(python3 -c \"import json; d=json.load(open('public/m2.json')); print(len(d))\") M2 data points"
+echo "Saved $(python3 -c "import json; print(len(json.load(open('public/m2.json'))))") M2 data points"
