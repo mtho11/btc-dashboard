@@ -15,7 +15,7 @@ A responsive market dashboard for comparing crypto, commodities, and U.S. equiti
 - Dashed period-high and period-low levels with values displayed on the price scale.
 - A US M2 liquidity overlay on the left axis; the selected asset price and moving averages use the right axis.
 - Performance panel for daily, weekly, monthly, YTD, one-year, and two-year returns.
-- Manual Refresh button in the top bar; data does not update automatically.
+- Manual Refresh button in the top bar; open pages also refresh quotes once a day.
 - Animated top ticker tape with each tracked asset's latest one-day return.
 - Light and dark themes, responsive layout, crosshair inspection, zooming, and panning.
 
@@ -39,7 +39,7 @@ Supported ranges: `1M`, `3M`, `6M`, `1Y`, `2Y`, and `5Y`.
 
 | Data | Source | Refresh behavior |
 | --- | --- | --- |
-| BTC, ETH, SOL, SUI, HYPE, ZEC, NEAR, Gold (PAXG), Silver (XAG), WTI Oil (CL), SPY, QQQ | OKX public API | Loaded live on page load and when you press Refresh |
+| BTC, ETH, SOL, SUI, HYPE, ZEC, NEAR, Gold (PAXG), Silver (XAG), WTI Oil (CL), SPY, QQQ | OKX public API | Loaded live on page load, once a day while the page is open, and when you press Refresh |
 | U.S. M2 | FRED | Stored in `public/m2.json`, refreshed daily by GitHub Actions (monthly series) |
 
 The crypto chart requests approximately 1,800 daily candles so the 200-week moving average has enough history to populate. Market data is informational only and may be delayed or unavailable.

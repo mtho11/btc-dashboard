@@ -72,6 +72,11 @@ export default function App() {
     if (cryptoTab === symbol) setCryptoTab('BTC')
   }
 
+  useEffect(() => {
+    const id = window.setInterval(() => setRefreshKey((key) => key + 1), 24 * 60 * 60 * 1000)
+    return () => window.clearInterval(id)
+  }, [])
+
   const m2Data = useM2Data(refreshKey)
   const { data: btcData, loading: btcLoading, error: btcError } = useBtcData(refreshKey)
   const comparisonTab = cryptoTab === 'ALL' || cryptoTab === 'HEATMAP'
@@ -290,7 +295,7 @@ export default function App() {
             </>
           ) : (
             <>
-              <span>Data source: OKX public API · live, updated when you press Refresh</span>
+              <span>Data source: OKX public API · live, updated daily and when you press Refresh</span>
               <span>200W MA requires ~1,400 days of history to fully populate</span>
             </>
           )}

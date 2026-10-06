@@ -249,14 +249,14 @@ const steps: Step[] = [
       'Track Bitcoin, Ethereum, Solana, Sui, Hyperliquid, Zcash, NEAR, Gold, Silver, Oil, SPY, and QQQ from one dashboard. Use ALL for a normalized comparison, HEATMAP for ranked period returns, or open a single asset for a detailed candlestick view.',
       'The ticker tape at the top shows each tracked asset\'s one-day return. Price data for every asset, including silver, oil, SPY and QQQ, is sourced live from OKX; M2 comes from FRED.',
     ],
-    tip: 'Press Refresh in the top bar to pull the latest prices. Data does not update on its own. The selected asset and range are preserved in the URL, so you can bookmark any view.',
+    tip: 'Press Refresh in the top bar to pull the latest prices; an open page also refreshes itself once a day. The selected asset and range are preserved in the URL, so you can bookmark any view.',
     visual: <VisualTabs />,
   },
   {
     title: 'Ticker tape & refresh controls',
     body: [
       'The daily ticker tape sits above the dashboard title and shows the latest one-day percentage return for every tracked asset. Green indicates a gain; red indicates a loss. It scrolls continuously and pauses when you hover it.',
-      'The Refresh button is in the header. Data loads when you open the page and updates only when you press it, so click Refresh whenever you want the latest prices.',
+      'The Refresh button is in the header. Data loads when you open the page, refreshes automatically once a day, and updates any time you press it, so click Refresh whenever you want the latest prices.',
     ],
     tip: 'Every price comes from the OKX market feed and reflects the moment of your last refresh. The tape may briefly show a dash while data is loading.',
     visual: <VisualTickerAndRefresh />,
