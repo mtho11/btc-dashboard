@@ -12,7 +12,7 @@ import CryptoTabSelector, { isCryptoTab, type CryptoTab, CRYPTO_TABS, type Custo
 import PerformanceSection from './components/PerformanceSection'
 import ThemeToggle from './components/ThemeToggle'
 import Guide from './components/Guide'
-import RefreshIntervalSelector, { type RefreshInterval } from './components/RefreshIntervalSelector'
+import RefreshButton from './components/RefreshButton'
 import TickerTape from './components/TickerTape'
 import HeatmapIntervalSelector, { isHeatmapInterval, type HeatmapInterval } from './components/HeatmapIntervalSelector'
 
@@ -47,14 +47,6 @@ export default function App() {
     const interval = new URLSearchParams(window.location.search).get('heatmapRange')
     return isHeatmapInterval(interval) ? interval : '1D'
   })
-  const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(() => {
-    try {
-      const rawSaved = localStorage.getItem('mtt_refresh_interval')
-      if (rawSaved === null) return 900_000
-      const saved = Number(rawSaved)
-      return [0, 300_000, 900_000, 1_800_000, 3_600_000].includes(saved) ? saved as RefreshInterval : 900_000
-    } catch { return 900_000 }
-  })
   const [refreshKey, setRefreshKey] = useState(0)
 
   const [showGuide, setShowGuide] = useState(() => {
@@ -79,13 +71,6 @@ export default function App() {
     try { localStorage.setItem('mtt_custom_tabs', JSON.stringify(next)) } catch {}
     if (cryptoTab === symbol) setCryptoTab('BTC')
   }
-
-  useEffect(() => {
-    try { localStorage.setItem('mtt_refresh_interval', String(refreshInterval)) } catch {}
-    if (refreshInterval === 0) return
-    const intervalId = window.setInterval(() => setRefreshKey((key) => key + 1), refreshInterval)
-    return () => window.clearInterval(intervalId)
-  }, [refreshInterval])
 
   const m2Data = useM2Data(refreshKey)
   const { data: btcData, loading: btcLoading, error: btcError } = useBtcData(refreshKey)
@@ -228,7 +213,7 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <RefreshIntervalSelector value={refreshInterval} onChange={setRefreshInterval} />
+          <RefreshButton onRefresh={() => setRefreshKey((key) => key + 1)} />
           <button
             onClick={() => setShowGuide(true)}
             className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-500"
@@ -301,11 +286,11 @@ export default function App() {
           {comparisonTab ? (
             <>
               <span>{cryptoTab === 'ALL' ? 'All assets normalized to % return from range start' : 'Heatmap values show return over the selected timeframe'}</span>
-              <span>Crypto: live OKX data · M2, commodities, and equities: daily refresh</span>
+              <span>Crypto: live OKX data · M2: stored, updated daily</span>
             </>
           ) : (
             <>
-              <span>Data source: OKX public API · live, refreshed on the interval above</span>
+              <span>Data source: OKX public API · live, updated when you press Refresh</span>
               <span>200W MA requires ~1,400 days of history to fully populate</span>
             </>
           )}

@@ -59,8 +59,7 @@ const VisualTickerAndRefresh = () => (
     <text x="32" y="47" fontSize="10" fill="#f8fafc" fontWeight="700" fontFamily="Inter, sans-serif">Market Tracker</text>
     <rect x="284" y="35" width="96" height="21" rx="5" fill="#1f2937" stroke="#334155"/>
     <path d="M294 47a4 4 0 1 0 1-3" fill="none" stroke="#22c55e" strokeWidth="1.2" strokeLinecap="round"/>
-    <text x="302" y="48.5" fontSize="7" fill="#cbd5e1" fontFamily="Inter, sans-serif">Refresh</text>
-    <text x="346" y="48.5" fontSize="7" fill="#f8fafc" fontWeight="700" fontFamily="Inter, sans-serif">15 min</text>
+    <text x="306" y="48.5" fontSize="7" fill="#f8fafc" fontWeight="700" fontFamily="Inter, sans-serif">Refresh</text>
     {/* Current tab row snapshot */}
     <rect x="10" y="71" width="380" height="29" rx="6" fill="#1f2937"/>
     {['ALL', 'HEATMAP', 'BTC', 'ETH', 'SOL', 'SUI', 'HYPE', 'ZEC'].map((tab, index) => (
@@ -250,16 +249,16 @@ const steps: Step[] = [
       'Track Bitcoin, Ethereum, Solana, Sui, Hyperliquid, Zcash, NEAR, Gold, Silver, Oil, SPY, and QQQ from one dashboard. Use ALL for a normalized comparison, HEATMAP for ranked period returns, or open a single asset for a detailed candlestick view.',
       'The ticker tape at the top shows each tracked asset\'s one-day return. Price data for every asset, including silver, oil, SPY and QQQ, is sourced live from OKX; M2 comes from FRED.',
     ],
-    tip: 'Use the Refresh control in the top bar to choose Off, 5 minutes, 15 minutes, 30 minutes, or 1 hour. The selected asset and range are preserved in the URL, so you can bookmark any view.',
+    tip: 'Press Refresh in the top bar to pull the latest prices. Data does not update on its own. The selected asset and range are preserved in the URL, so you can bookmark any view.',
     visual: <VisualTabs />,
   },
   {
     title: 'Ticker tape & refresh controls',
     body: [
       'The daily ticker tape sits above the dashboard title and shows the latest one-day percentage return for every tracked asset. Green indicates a gain; red indicates a loss. It scrolls continuously and pauses when you hover it.',
-      'The Refresh control is in the header. Choose Off, 5 minutes, 15 minutes, 30 minutes, or 1 hour. A 15-minute interval is the default for new visitors and your choice is remembered on this device.',
+      'The Refresh button is in the header. Data loads when you open the page and updates only when you press it, so click Refresh whenever you want the latest prices.',
     ],
-    tip: 'Commodity and equity figures use the latest available daily close, while crypto updates from the OKX market feed. The tape may briefly show a dash while data is loading.',
+    tip: 'Every price comes from the OKX market feed and reflects the moment of your last refresh. The tape may briefly show a dash while data is loading.',
     visual: <VisualTickerAndRefresh />,
   },
   {
