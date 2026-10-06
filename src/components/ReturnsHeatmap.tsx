@@ -145,7 +145,12 @@ export default function ReturnsHeatmap({ assets, range, dark }: Props) {
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
-                  <span className="font-semibold" style={{ color: ASSET_COLORS[label] ?? color }}>{label}</span>
+                  <span className="font-semibold" style={{ color: ASSET_COLORS[label] ?? color }}>
+                    {offHighPercent !== null && offHighPercent >= -5 && (
+                      <span className="mr-1" style={{ color: '#fbbf24' }} role="img" aria-label="Within 5% of high" title="Within 5% of the high">★</span>
+                    )}
+                    {label}
+                  </span>
                   <span
                     className="truncate text-xs font-medium"
                     style={{ color: offHighPercent === null ? '#94a3b8' : offHighPercent >= -0.01 ? '#22c55e' : (dark ? '#fecaca' : '#b91c1c') }}
