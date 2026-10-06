@@ -38,8 +38,18 @@ export function useBtcData(refreshKey = 0) {
 
     async function fetchData() {
       try {
-        setLoading(true)
         setError(null)
+
+        if (cache.current) {
+          const latest = await fetchBatch()
+          const byTime = new Map(cache.current.map((p) => [p.time, p]))
+          for (const p of latest) byTime.set(p.time, p)
+          const merged = [...byTime.values()].sort((a, b) => a.time - b.time)
+          if (!cancelled) { cache.current = merged; setData(merged) }
+          return
+        }
+
+        setLoading(true)
 
         const allPoints: OhlcPoint[] = []
         let after: string | undefined
