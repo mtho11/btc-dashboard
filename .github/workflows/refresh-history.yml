@@ -1,0 +1,31 @@
+name: Refresh Price History
+
+on:
+  schedule:
+    - cron: '30 6 * * *'  # Daily, after the M2 refresh
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch daily history from Yahoo Finance
+        run: node scripts/fetch-history.mjs
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/history
+          git diff --cached --quiet || git commit -m "chore: refresh price history"
+          git pull --rebase
+          git push

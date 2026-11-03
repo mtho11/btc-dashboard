@@ -90,11 +90,11 @@ export default function App() {
   const { data: zecData, loading: zecLoading, error: zecError } = useCryptoOhlcData(cryptoTab === 'ZEC' || loadAllAssetData ? 'ZEC-USDT' : null, allDelay(4), refreshKey)
   const { data: nearData, loading: nearLoading, error: nearError } = useCryptoOhlcData(cryptoTab === 'NEAR' || loadAllAssetData ? 'NEAR-USDT' : null, allDelay(5), refreshKey)
   // PAXG (PAX Gold) = 1 troy oz gold, trades on OKX — same live API as BTC/ETH/SOL
-  const { data: goldData, loading: goldLoading, error: goldError } = useCryptoOhlcData(cryptoTab === 'GOLD' || loadAllAssetData ? 'PAXG-USDT' : null, allDelay(6), refreshKey)
-  const { data: silverData, loading: silverLoading, error: silverError } = useCryptoOhlcData(cryptoTab === 'SILVER' || loadAllAssetData ? 'XAG-USDT-SWAP' : null, allDelay(7), refreshKey)
-  const { data: oilData, loading: oilLoading, error: oilError } = useCryptoOhlcData(cryptoTab === 'OIL' || loadAllAssetData ? 'CL-USDT-SWAP' : null, allDelay(8), refreshKey)
-  const { data: spyData, loading: spyLoading, error: spyError } = useCryptoOhlcData(cryptoTab === 'SPY' || loadAllAssetData ? 'SPY-USDT-SWAP' : null, allDelay(9), refreshKey)
-  const { data: qqqData, loading: qqqLoading, error: qqqError } = useCryptoOhlcData(cryptoTab === 'QQQ' || loadAllAssetData ? 'QQQ-USDT-SWAP' : null, allDelay(10), refreshKey)
+  const { data: goldData, loading: goldLoading, error: goldError } = useCryptoOhlcData(cryptoTab === 'GOLD' || loadAllAssetData ? 'PAXG-USDT' : null, allDelay(6), refreshKey, 'GOLD')
+  const { data: silverData, loading: silverLoading, error: silverError } = useCryptoOhlcData(cryptoTab === 'SILVER' || loadAllAssetData ? 'XAG-USDT-SWAP' : null, allDelay(7), refreshKey, 'SILVER')
+  const { data: oilData, loading: oilLoading, error: oilError } = useCryptoOhlcData(cryptoTab === 'OIL' || loadAllAssetData ? 'CL-USDT-SWAP' : null, allDelay(8), refreshKey, 'OIL')
+  const { data: spyData, loading: spyLoading, error: spyError } = useCryptoOhlcData(cryptoTab === 'SPY' || loadAllAssetData ? 'SPY-USDT-SWAP' : null, allDelay(9), refreshKey, 'SPY')
+  const { data: qqqData, loading: qqqLoading, error: qqqError } = useCryptoOhlcData(cryptoTab === 'QQQ' || loadAllAssetData ? 'QQQ-USDT-SWAP' : null, allDelay(10), refreshKey, 'QQQ')
 
   const isCustomTab = !CRYPTO_TABS.includes(cryptoTab as CryptoTab)
   const customInstId = isCustomTab ? (customTabs.find(t => t.symbol === cryptoTab)?.instId ?? null) : null

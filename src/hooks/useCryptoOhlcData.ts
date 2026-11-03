@@ -7,6 +7,24 @@ const BATCHES = 6
 
 const cache: Record<string, OhlcPoint[]> = {}
 
+// Older daily bars (public/history/<tab>.json) for instruments OKX listed too recently for a 200D/200W MA.
+// They are rescaled to the OKX price level at the join so the series has no step.
+async function prependHistory(history: string, live: OhlcPoint[]): Promise<OhlcPoint[]> {
+  try {
+    const res = await fetch(`${import.meta.env.BASE_URL}history/${history}.json`)
+    if (!res.ok || live.length === 0) return live
+    const old: OhlcPoint[] = await res.json()
+    const firstLive = live[0].time
+    const ref = old.find((p) => p.time === firstLive) ?? [...old].reverse().find((p) => p.time < firstLive)
+    const older = old.filter((p) => p.time < firstLive)
+    if (!ref || older.length === 0) return live
+    const k = live[0].close / ref.close
+    return [...older.map((p) => ({ time: p.time, open: p.open * k, high: p.high * k, low: p.low * k, close: p.close * k })), ...live]
+  } catch {
+    return live
+  }
+}
+
 async function fetchBatch(instId: string, after?: string, attempt = 0): Promise<OhlcPoint[]> {
   const params = new URLSearchParams({ instId, bar: '1D', limit: String(BATCH) })
   if (after) params.set('after', after)
@@ -26,7 +44,7 @@ async function fetchBatch(instId: string, after?: string, attempt = 0): Promise<
   }))
 }
 
-export function useCryptoOhlcData(instId: string | null, delayMs = 0, refreshKey = 0) {
+export function useCryptoOhlcData(instId: string | null, delayMs = 0, refreshKey = 0, history?: string) {
   const [data, setData] = useState<OhlcPoint[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -76,8 +94,10 @@ export function useCryptoOhlcData(instId: string | null, delayMs = 0, refreshKey
           .sort((a, b) => a.time - b.time)
 
         if (!cancelled) {
-          cache[instId!] = deduped
-          setData(deduped)
+          const full = history ? await prependHistory(history, deduped) : deduped
+          if (cancelled) return
+          cache[instId!] = full
+          setData(full)
         }
       } catch (e) {
         if (!cancelled) setError((e as Error).message)
@@ -88,7 +108,7 @@ export function useCryptoOhlcData(instId: string | null, delayMs = 0, refreshKey
 
     fetchData()
     return () => { cancelled = true }
-  }, [instId, refreshKey])
+  }, [instId, refreshKey, history])
 
   return { data, loading, error }
 }
