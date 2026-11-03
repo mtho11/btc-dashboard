@@ -20,7 +20,13 @@ for (const [tab, symbol] of Object.entries(SYMBOLS)) {
     result.timestamp.forEach((t, i) => {
       if ([q.open[i], q.high[i], q.low[i], q.close[i]].some((v) => v == null)) return
       const time = Math.floor((t + offset) / 86400) * 86400
-      bars.push({ time, open: +q.open[i].toFixed(4), high: +q.high[i].toFixed(4), low: +q.low[i].toFixed(4), close: +q.close[i].toFixed(4) })
+      const { open, close } = { open: q.open[i], close: q.close[i] }
+      // Yahoo occasionally ships high < low; widen the range to cover open/close.
+      const high = Math.max(q.high[i], q.low[i], open, close)
+      const low = Math.min(q.high[i], q.low[i], open, close)
+      // Skip non-positive prices (e.g. WTI in April 2020): the chart can't draw them.
+      if (low <= 0) return
+      bars.push({ time, open: +open.toFixed(4), high: +high.toFixed(4), low: +low.toFixed(4), close: +close.toFixed(4) })
     })
     // Yahoo can return two bars for one date (e.g. a live intraday bar); keep the later one and sort ascending.
     const byTime = new Map(bars.map((b) => [b.time, b]))
