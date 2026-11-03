@@ -9,7 +9,7 @@ let failed = 0
 for (const [tab, symbol] of Object.entries(SYMBOLS)) {
   try {
     const res = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=10y&interval=1d`,
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=20y&interval=1d`,
       { headers: { 'User-Agent': 'Mozilla/5.0' } },
     )
     if (!res.ok) throw new Error(`HTTP ${res.status}`)

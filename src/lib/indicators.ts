@@ -80,3 +80,18 @@ export function sma(data: OhlcPoint[], period: number): LinePoint[] {
   }
   return result
 }
+
+/**
+ * SMA that, until `period` bars exist, averages every bar so far (starting at `minBars`).
+ * Lets a long average such as the 200W MA appear for assets with less history than the full window.
+ */
+export function smaExpanding(data: OhlcPoint[], period: number, minBars: number): LinePoint[] {
+  const result: LinePoint[] = []
+  let sum = 0
+  for (let i = 0; i < data.length; i++) {
+    sum += data[i].close
+    if (i >= period) sum -= data[i - period].close
+    if (i + 1 >= minBars) result.push({ time: data[i].time, value: sum / Math.min(i + 1, period) })
+  }
+  return result
+}

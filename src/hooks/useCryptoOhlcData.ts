@@ -3,7 +3,7 @@ import type { OhlcPoint } from '../lib/indicators'
 
 const OKX = 'https://www.okx.com/api/v5/market/history-candles'
 const BATCH = 300
-const BATCHES = 6
+const BATCHES = 12 // 3600 days: 1400 for the 200W MA plus a 5Y view
 
 const cache: Record<string, OhlcPoint[]> = {}
 
@@ -29,7 +29,7 @@ async function fetchBatch(instId: string, after?: string, attempt = 0): Promise<
   const params = new URLSearchParams({ instId, bar: '1D', limit: String(BATCH) })
   if (after) params.set('after', after)
   const res = await fetch(`${OKX}?${params}`)
-  if (res.status === 429 && attempt < 3) {
+  if (res.status === 429 && attempt < 5) {
     await new Promise(r => setTimeout(r, 2000 * (attempt + 1)))
     return fetchBatch(instId, after, attempt + 1)
   }
@@ -86,6 +86,7 @@ export function useCryptoOhlcData(instId: string | null, delayMs = 0, refreshKey
           allPoints.push(...batch)
           after = String(batch[batch.length - 1].time * 1000)
           if (cancelled) return
+          await new Promise(r => setTimeout(r, 250))
         }
 
         const seen = new Set<number>()

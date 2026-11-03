@@ -4,12 +4,16 @@ import type { OhlcPoint } from '../lib/indicators'
 // OKX history-candles: [ts_ms, open, high, low, close, vol, volCcy, volCcyQuote, confirm]
 const OKX = 'https://www.okx.com/api/v5/market/history-candles'
 const BATCH = 300
-const BATCHES = 6 // 6 × 300 = 1800 days > 1400 needed for 200W MA
+const BATCHES = 12 // 12 × 300 = 3600 days: 1400 for the 200W MA plus a 5Y view
 
-async function fetchBatch(after?: string): Promise<OhlcPoint[]> {
+async function fetchBatch(after?: string, attempt = 0): Promise<OhlcPoint[]> {
   const params = new URLSearchParams({ instId: 'BTC-USDT', bar: '1D', limit: String(BATCH) })
   if (after) params.set('after', after)
   const res = await fetch(`${OKX}?${params}`)
+  if (res.status === 429 && attempt < 5) {
+    await new Promise(r => setTimeout(r, 2000 * (attempt + 1)))
+    return fetchBatch(after, attempt + 1)
+  }
   if (!res.ok) throw new Error(`OKX HTTP ${res.status}`)
   const json: { data: string[][] } = await res.json()
   return json.data.map((k) => ({
@@ -61,6 +65,7 @@ export function useBtcData(refreshKey = 0) {
           // OKX returns newest-first; oldest entry in this batch becomes the next `after`
           after = String(batch[batch.length - 1].time * 1000)
           if (cancelled) return
+          await new Promise(r => setTimeout(r, 250))
         }
 
         // Sort ascending and deduplicate

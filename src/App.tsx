@@ -3,7 +3,7 @@ import './index.css'
 import { useBtcData } from './hooks/useBtcData'
 import { useCryptoOhlcData } from './hooks/useCryptoOhlcData'
 import { useM2Data } from './hooks/useM2Data'
-import { sma, deathCrosses, goldenCrosses, priceAboveMa, priceBelowMa } from './lib/indicators'
+import { sma, smaExpanding, deathCrosses, goldenCrosses, priceAboveMa, priceBelowMa } from './lib/indicators'
 import Chart from './components/Chart'
 import AllAssetsChart from './components/AllAssetsChart'
 import ReturnsHeatmap from './components/ReturnsHeatmap'
@@ -198,7 +198,7 @@ export default function App() {
   // Compute MAs over the FULL dataset for accurate values even when zoomed in
   const ma50 = useMemo(() => sma(data, 50), [data])
   const ma200d = useMemo(() => sma(data, 200), [data])
-  const ma200w = useMemo(() => sma(data, 1400), [data])
+  const ma200w = useMemo(() => smaExpanding(data, 1400, 200), [data])
   const crosses = useMemo(() => deathCrosses(ma50, ma200d), [ma50, ma200d])
   const gCrosses = useMemo(() => goldenCrosses(ma50, ma200d), [ma50, ma200d])
   const priceBuys = useMemo(() => priceAboveMa(data, ma50), [data, ma50])
@@ -296,7 +296,7 @@ export default function App() {
           ) : (
             <>
               <span>Data source: OKX public API · live, updated daily and when you press Refresh</span>
-              <span>200W MA requires ~1,400 days of history to fully populate</span>
+              <span>200W MA averages all available history until 1,400 days exist</span>
             </>
           )}
         </div>
