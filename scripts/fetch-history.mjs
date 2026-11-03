@@ -22,6 +22,9 @@ for (const [tab, symbol] of Object.entries(SYMBOLS)) {
       const time = Math.floor((t + offset) / 86400) * 86400
       bars.push({ time, open: +q.open[i].toFixed(4), high: +q.high[i].toFixed(4), low: +q.low[i].toFixed(4), close: +q.close[i].toFixed(4) })
     })
+    // Yahoo can return two bars for one date (e.g. a live intraday bar); keep the later one and sort ascending.
+    const byTime = new Map(bars.map((b) => [b.time, b]))
+    bars.splice(0, bars.length, ...[...byTime.values()].sort((a, b) => a.time - b.time))
     if (bars.length < 200) throw new Error(`only ${bars.length} bars`)
     writeFileSync(`public/history/${tab}.json`, JSON.stringify(bars))
     console.log(`${tab}: ${bars.length} bars`)

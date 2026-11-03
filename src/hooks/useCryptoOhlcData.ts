@@ -13,7 +13,7 @@ async function prependHistory(history: string, live: OhlcPoint[]): Promise<OhlcP
   try {
     const res = await fetch(`${import.meta.env.BASE_URL}history/${history}.json`)
     if (!res.ok || live.length === 0) return live
-    const old: OhlcPoint[] = await res.json()
+    const old: OhlcPoint[] = [...new Map((await res.json() as OhlcPoint[]).map((p) => [p.time, p])).values()].sort((a, b) => a.time - b.time)
     const firstLive = live[0].time
     const ref = old.find((p) => p.time === firstLive) ?? [...old].reverse().find((p) => p.time < firstLive)
     const older = old.filter((p) => p.time < firstLive)
