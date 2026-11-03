@@ -23,6 +23,7 @@ interface Props {
   assets: AssetData[]
   range: HeatmapInterval
   dark: boolean
+  onSelect?: (label: string) => void
 }
 
 function closeAtOrBefore(data: OhlcPoint[], targetTime: number): number | null {
@@ -98,7 +99,7 @@ function formatPrice(value: number | null) {
   return `$${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits })}`
 }
 
-export default function ReturnsHeatmap({ assets, range, dark }: Props) {
+export default function ReturnsHeatmap({ assets, range, dark, onSelect }: Props) {
   const entries: HeatmapEntry[] = assets
     .map(({ label, data }) => ({ label, returnPercent: calculateReturn(data, range), offHighPercent: percentOffHigh(data), ...periodRange(data, range) }))
     .sort((a, b) => (b.returnPercent ?? -Infinity) - (a.returnPercent ?? -Infinity))
@@ -140,7 +141,12 @@ export default function ReturnsHeatmap({ assets, range, dark }: Props) {
           return (
             <div
               key={label}
-              className="min-h-44 rounded-xl border p-4 flex flex-col justify-between transition-transform hover:-translate-y-0.5"
+              role="button"
+              tabIndex={0}
+              title={`Open ${label} tab`}
+              onClick={() => onSelect?.(label)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect?.(label) } }}
+              className="min-h-44 cursor-pointer rounded-xl border p-4 flex flex-col justify-between transition-transform hover:-translate-y-0.5"
               style={{ background, borderColor: `${color}55` }}
             >
               <div className="flex items-center justify-between gap-3">

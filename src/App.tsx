@@ -257,7 +257,7 @@ export default function App() {
               dark={dark}
             />
           ) : cryptoTab === 'HEATMAP' ? (
-            <ReturnsHeatmap assets={allAssets} range={heatmapInterval} dark={dark} />
+            <ReturnsHeatmap assets={allAssets} range={heatmapInterval} dark={dark} onSelect={setCryptoTab} />
           ) : loading ? (
             <div className="h-full flex flex-col items-center justify-center gap-4 text-gray-400">
               <div className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
