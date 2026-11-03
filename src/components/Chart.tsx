@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   createChart,
   CandlestickSeries,
+  HistogramSeries,
   LineSeries,
   LineStyle,
   type IChartApi,
@@ -57,6 +58,7 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
   const ma200dRef = useRef<ISeriesApi<'Line'> | null>(null)
   const ma200wRef = useRef<ISeriesApi<'Line'> | null>(null)
   const m2Ref = useRef<ISeriesApi<'Line'> | null>(null)
+  const regimeRef = useRef<ISeriesApi<'Histogram'> | null>(null)
   const m2LastRef = useRef<{ time: number; value: number } | null>(null)
   const m2LabelRef = useRef<HTMLDivElement | null>(null)
   const periodHighLineRef = useRef<IPriceLine | null>(null)
@@ -201,7 +203,17 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
       priceScaleId: 'left',
     })
 
+    // Light band along the bottom of the chart: green while the 50D MA is above the 200D MA (bull), red while below (bear).
+    const regimeSeries = chart.addSeries(HistogramSeries, {
+      priceLineVisible: false,
+      lastValueVisible: false,
+      priceScaleId: 'regime',
+      autoscaleInfoProvider: () => ({ priceRange: { minValue: 0, maxValue: 1 } }),
+    })
+    chart.priceScale('regime').applyOptions({ scaleMargins: { top: 0.94, bottom: 0 }, visible: false })
+
     chartRef.current = chart
+    regimeRef.current = regimeSeries
     candleRef.current = candleSeries
     ma50Ref.current = ma50Series
     ma200dRef.current = ma200dSeries
@@ -280,6 +292,16 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
     ma50Ref.current.setData(ma50.map((d) => ({ time: d.time as Time, value: d.value })))
     ma200dRef.current.setData(ma200d.map((d) => ({ time: d.time as Time, value: d.value })))
     ma200wRef.current.setData(ma200w.map((d) => ({ time: d.time as Time, value: d.value })))
+    if (regimeRef.current) {
+      const ma200dByTime = new Map(ma200d.map((p) => [p.time, p.value]))
+      regimeRef.current.setData(
+        ma50.flatMap((p) => {
+          const slow = ma200dByTime.get(p.time)
+          if (slow === undefined) return []
+          return [{ time: p.time as Time, value: 1, color: p.value >= slow ? 'rgba(34,197,94,0.22)' : 'rgba(239,68,68,0.22)' }]
+        })
+      )
+    }
     // Apply range in a RAF so it runs after lwc's first render (which triggers auto-fit).
     // The chart time scale is null until the first render frame.
     const raf = requestAnimationFrame(() => {
@@ -427,23 +449,29 @@ export default function Chart({ data, ma50, ma200d, ma200w, deathCrosses, golden
               className="absolute" style={{ display: 'none', width: '1px', bottom: '28px',
                 borderLeft: '1px dashed rgba(34,197,94,0.5)' }} />
           ))}
-          {/* Price/50D MA close-cross arrows — 50% transparent and anchored to the 50D MA */}
+          {/* Price/50D MA close-cross arrows — 30% transparent and anchored to the 50D MA */}
           {priceBuys.map((c) => (
             <div key={`pb-${c.time}`} data-price-arrow={c.time} data-dir="price-up" data-price={ma50Map.get(c.time) ?? 0}
               className="absolute" style={{ display: 'none' }}>
               <svg width="14" height="14" viewBox="0 0 14 14" aria-label="Close crossed above 50-day moving average">
-                <path d="M7 1 1 8h4v5h4V8h4L7 1Z" fill="rgba(134,239,172,0.5)" />
+                <path d="M7 1 1 8h4v5h4V8h4L7 1Z" fill="rgba(134,239,172,0.7)" />
               </svg>
             </div>
           ))}
-          {/* Price/50D MA close-cross arrows — 50% transparent and anchored to the 50D MA */}
+          {/* Price/50D MA close-cross arrows — 30% transparent and anchored to the 50D MA */}
           {priceSells.map((c) => (
             <div key={`ps-${c.time}`} data-price-arrow={c.time} data-dir="price-down" data-price={ma50Map.get(c.time) ?? 0}
               className="absolute" style={{ display: 'none' }}>
               <svg width="14" height="14" viewBox="0 0 14 14" aria-label="Close crossed below 50-day moving average">
-                <path d="M7 13 1 6h4V1h4v5h4l-6 7Z" fill="rgba(252,165,165,0.5)" />
+                <path d="M7 13 1 6h4V1h4v5h4l-6 7Z" fill="rgba(252,165,165,0.7)" />
               </svg>
             </div>
+          ))}
+          {/* Gray dotted lines from each close/50D MA cross down to the time axis */}
+          {[...priceBuys, ...priceSells].map((c) => (
+            <div key={`pl-${c.time}`} data-line={c.time} data-price={ma50Map.get(c.time) ?? 0}
+              className="absolute" style={{ display: 'none', width: '1px', bottom: '28px',
+                borderLeft: '1px dotted rgba(128,128,128,0.5)' }} />
           ))}
         </div>
       </div>
