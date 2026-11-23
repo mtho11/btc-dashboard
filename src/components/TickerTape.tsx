@@ -2,6 +2,7 @@ import { ASSET_COLORS, type AssetData } from './AllAssetsChart'
 
 interface Props {
   assets: AssetData[]
+  onSelect?: (label: string) => void
 }
 
 function dailyReturn(data: AssetData['data']): number | null {
@@ -11,22 +12,28 @@ function dailyReturn(data: AssetData['data']): number | null {
   return ((latest.close - previous.close) / previous.close) * 100
 }
 
-function TickerItem({ label, value }: { label: string; value: number | null }) {
+function TickerItem({ label, value, onSelect, hidden }: { label: string; value: number | null; onSelect?: (label: string) => void; hidden?: boolean }) {
   const positive = (value ?? 0) >= 0
   const valueColor = value === null ? 'text-gray-400 dark:text-gray-500' : positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
 
   return (
-    <div className="inline-flex shrink-0 items-center gap-2 border-r border-gray-200 px-4 py-2 text-xs dark:border-gray-800">
+    <button
+      type="button"
+      onClick={() => onSelect?.(label)}
+      tabIndex={hidden ? -1 : undefined}
+      title={`Open ${label} tab`}
+      className="inline-flex shrink-0 cursor-pointer items-center gap-2 border-r border-gray-200 px-4 py-2 text-xs transition-colors hover:bg-gray-200/70 dark:border-gray-800 dark:hover:bg-gray-800/70"
+    >
       <span className="h-2 w-2 rounded-full" style={{ background: ASSET_COLORS[label] ?? '#64748b' }} />
       <span className="font-semibold text-gray-700 dark:text-gray-200">{label}</span>
       <span className={`font-semibold tabular-nums ${valueColor}`}>
         {value === null ? '—' : `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`}
       </span>
-    </div>
+    </button>
   )
 }
 
-export default function TickerTape({ assets }: Props) {
+export default function TickerTape({ assets, onSelect }: Props) {
   const entries = assets.map(({ label, data }) => ({ label, value: dailyReturn(data) }))
 
   return (
@@ -38,9 +45,9 @@ export default function TickerTape({ assets }: Props) {
         </div>
         <div className="min-w-0 overflow-hidden">
           <div className="ticker-track flex w-max">
-            {entries.map((entry) => <TickerItem key={entry.label} {...entry} />)}
+            {entries.map((entry) => <TickerItem key={entry.label} {...entry} onSelect={onSelect} />)}
             <div className="flex" aria-hidden="true">
-              {entries.map((entry) => <TickerItem key={`duplicate-${entry.label}`} {...entry} />)}
+              {entries.map((entry) => <TickerItem key={`duplicate-${entry.label}`} {...entry} onSelect={onSelect} hidden />)}
             </div>
           </div>
         </div>
