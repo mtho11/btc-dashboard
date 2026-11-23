@@ -112,6 +112,11 @@ function formatPrice(value: number | null) {
   return `$${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits })}`
 }
 
+function formatTick(value: number) {
+  if (value >= 1000) return `$${new Intl.NumberFormat(undefined, { notation: 'compact', minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value)}`
+  return `$${value.toLocaleString(undefined, { maximumFractionDigits: value >= 100 ? 0 : 2 })}`
+}
+
 export default function ReturnsHeatmap({ assets, range, dark, onSelect }: Props) {
   const entries: HeatmapEntry[] = assets
     .map(({ label, data }) => ({ label, returnPercent: calculateReturn(data, range), offHighPercent: percentOffHigh(data), price: data.length ? data[data.length - 1].close : null, ...periodRange(data, range), ...yearRange(data) }))
@@ -233,7 +238,20 @@ export default function ReturnsHeatmap({ assets, range, dark, onSelect }: Props)
                         />
                       )}
                     </div>
-                    <div className="h-2" />
+                    {yearLow !== null && span > 0 && (
+                      <div className="relative mt-2 h-6" aria-hidden="true">
+                        {[0, 25, 50, 75, 100].map((pct) => (
+                          <div key={pct} className="absolute top-0 -translate-x-1/2" style={{ left: `${pct}%` }}>
+                            <div className="mx-auto h-2 w-px" style={{ background: mutedColor }} />
+                            {pct > 0 && pct < 100 && (
+                              <div className="mt-0.5 text-[10px] font-medium tabular-nums leading-none" style={{ color: mutedColor }}>
+                                {formatTick(yearLow + (span * pct) / 100)}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )
               })()}
