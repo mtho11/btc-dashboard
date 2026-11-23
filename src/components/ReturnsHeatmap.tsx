@@ -177,6 +177,13 @@ export default function ReturnsHeatmap({ assets, range, dark, onSelect }: Props)
                   >
                     {formatOffHigh(offHighPercent)}
                   </span>
+                  <span
+                    className="shrink-0 text-xs font-medium tabular-nums"
+                    style={{ color: dark ? '#94a3b8' : '#64748b' }}
+                    title={`Highest price in the selected ${range} period`}
+                  >
+                    {range} high {formatPrice(periodHigh)}
+                  </span>
                 </div>
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: ASSET_COLORS[label] ?? color }} />
               </div>
