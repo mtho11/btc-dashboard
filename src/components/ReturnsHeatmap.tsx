@@ -18,6 +18,8 @@ interface HeatmapEntry {
   periodLow: number | null
   periodHigh: number | null
   currentPosition: number | null
+  yearLow: number | null
+  yearHigh: number | null
 }
 
 interface Props {
@@ -94,6 +96,16 @@ function periodRange(data: OhlcPoint[], range: HeatmapInterval) {
   return { periodLow, periodHigh, currentPosition }
 }
 
+function yearRange(data: OhlcPoint[]) {
+  const last = data[data.length - 1]
+  if (!last) return { yearLow: null, yearHigh: null }
+  const points = data.filter((point) => point.time >= last.time - 365 * 86400)
+  const yearLow = points.reduce((minimum, point) => Math.min(minimum, point.low), Number.POSITIVE_INFINITY)
+  const yearHigh = points.reduce((maximum, point) => Math.max(maximum, point.high), Number.NEGATIVE_INFINITY)
+  if (!Number.isFinite(yearLow) || !Number.isFinite(yearHigh)) return { yearLow: null, yearHigh: null }
+  return { yearLow, yearHigh }
+}
+
 function formatPrice(value: number | null) {
   if (value === null) return '—'
   const maximumFractionDigits = value >= 1000 ? 0 : value >= 1 ? 2 : 4
@@ -102,7 +114,7 @@ function formatPrice(value: number | null) {
 
 export default function ReturnsHeatmap({ assets, range, dark, onSelect }: Props) {
   const entries: HeatmapEntry[] = assets
-    .map(({ label, data }) => ({ label, returnPercent: calculateReturn(data, range), offHighPercent: percentOffHigh(data), price: data.length ? data[data.length - 1].close : null, ...periodRange(data, range) }))
+    .map(({ label, data }) => ({ label, returnPercent: calculateReturn(data, range), offHighPercent: percentOffHigh(data), price: data.length ? data[data.length - 1].close : null, ...periodRange(data, range), ...yearRange(data) }))
     .sort((a, b) => (b.returnPercent ?? -Infinity) - (a.returnPercent ?? -Infinity))
   const maxMagnitude = Math.max(1, ...entries.map((entry) => Math.abs(entry.returnPercent ?? 0)))
 
@@ -117,7 +129,7 @@ export default function ReturnsHeatmap({ assets, range, dark, onSelect }: Props)
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-        {entries.map(({ label, returnPercent, offHighPercent, price, periodLow, periodHigh, currentPosition }) => {
+        {entries.map(({ label, returnPercent, offHighPercent, price, periodLow, periodHigh, yearLow, yearHigh }) => {
           const positive = (returnPercent ?? 0) >= 0
           const intensity = returnPercent === null ? 0 : 0.1 + (Math.abs(returnPercent) / maxMagnitude) * 0.68
           const color = returnPercent === null ? '#64748b' : positive ? '#22c55e' : '#ef4444'
@@ -182,21 +194,42 @@ export default function ReturnsHeatmap({ assets, range, dark, onSelect }: Props)
                   <span>Latest price</span>
                 </div>
               </div>
-              <div className="mt-4" aria-label={`${range} price range: ${formatPrice(periodLow)} to ${formatPrice(periodHigh)}`}>
-                <div className="relative h-3">
-                  <div className="absolute inset-x-0 top-1.5 h-px" style={{ background: mutedColor }} />
-                  {currentPosition !== null && (
-                    <span
-                      className="absolute top-0 h-3 w-3 -translate-x-1/2 rotate-45 border"
-                      style={{ left: `${currentPosition * 100}%`, background: ASSET_COLORS[label] ?? '#f8fafc', borderColor: 'rgba(255,255,255,0.9)', boxShadow: '0 1px 3px rgba(0,0,0,0.35)' }}
-                    />
-                  )}
-                </div>
-                <div className="mt-1 flex items-center justify-between gap-3 text-xs font-medium tabular-nums" style={{ color: mutedColor }}>
-                  <span>{formatPrice(periodLow)}</span>
-                  <span>{formatPrice(periodHigh)}</span>
-                </div>
-              </div>
+              {(() => {
+                const span = yearLow !== null && yearHigh !== null ? yearHigh - yearLow : 0
+                const at = (value: number | null) => (value === null || span <= 0 ? null : Math.min(1, Math.max(0, (value - (yearLow as number)) / span)) * 100)
+                const segStart = at(periodLow)
+                const segEnd = at(periodHigh)
+                const marker = at(price)
+                return (
+                  <div
+                    className="mt-4"
+                    aria-label={`${range} range ${formatPrice(periodLow)} to ${formatPrice(periodHigh)} within the 52 week range ${formatPrice(yearLow)} to ${formatPrice(yearHigh)}`}
+                    title={`${range} range: ${formatPrice(periodLow)} – ${formatPrice(periodHigh)}`}
+                  >
+                    <div className="flex items-center justify-between gap-3 text-xs font-medium tabular-nums" style={{ color: mutedColor }}>
+                      <span>{formatPrice(yearLow)}</span>
+                      <span className="opacity-80">52wk range</span>
+                      <span>{formatPrice(yearHigh)}</span>
+                    </div>
+                    <div className="relative mt-1.5 h-1.5 rounded-full" style={{ background: dark ? 'rgba(15,23,42,0.55)' : 'rgba(15,23,42,0.18)' }}>
+                      {segStart !== null && segEnd !== null && (
+                        <div
+                          className="absolute inset-y-0 rounded-full"
+                          style={{ left: `${segStart}%`, width: `${Math.max(segEnd - segStart, 1.5)}%`, background: color }}
+                        />
+                      )}
+                      {marker !== null && (
+                        <span
+                          className="absolute top-full mt-0.5 -translate-x-1/2"
+                          style={{ left: `${marker}%`, width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderBottom: `7px solid ${dark ? '#e2e8f0' : '#334155'}` }}
+                          aria-hidden="true"
+                        />
+                      )}
+                    </div>
+                    <div className="h-2" />
+                  </div>
+                )
+              })()}
             </div>
           )
         })}
